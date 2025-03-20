@@ -102,6 +102,15 @@ h5 {font-family: var(--gbr-font-family);color: var(--gbr-dark-gray);font-size: 1
 h6 {font-family: var(--gbr-font-family);color: var(--gbr-dark-gray);font-size: 8px;}
 p {font-family: var(--gbr-font-family);color: var(--gbr-dark-gray);font-size: 20px;}
 
+.main-content {
+  margin: 0px 0px 0px 0px; /* Default margin for small screens */
+}
+@media (min-width: 768px) {
+  .main-content {
+    margin: 0px 0px 0px 0px; /* Margin for medium and larger screens */
+  }
+}
+
 body {
   font-family: var(--gbr-font-family); 
   background: var(--gbr-white);
@@ -759,14 +768,6 @@ font-weight : normal;
   height: 100%; /* Adjust as needed */
 }
 
-.main-content {
-  margin: 0px 0px 0px 0px; /* Default margin for small screens */
-}
-@media (min-width: 768px) {
-  .main-content {
-    margin: 0px 0px 0px 0px; /* Margin for medium and larger screens */
-  }
-}
 
 .main-nav-content {
 margin-left : 45px;

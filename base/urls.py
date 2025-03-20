@@ -10,6 +10,7 @@ from . import views
 
 urlpatterns = [
     path('', views.base_home, name='base-home'),
+    path('venue', views.base_venue, name='base-venue'),
 
 #    path('trigger-500/', views.trigger_500_error, name='trigger-500'),
 #    path('record-500/', views.custom_500_error, name='custom-500'),
