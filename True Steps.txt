@@ -1,0 +1,183 @@
+#.venv\scripts\activate
+
+# python manage.py makemigrations
+# python manage.py migrate
+# python manage.py createsuperuser
+
+If the site looks odd after a rebuild, run:
+python manage.py collectstatic 
+on local and push again.
+
+Interesting libraries
+    Admin Logs: django-admin-logs
+    Image Optimization: easy-thumbnails
+    PostgreSQL: psycopg2
+    REST API: djangorestframework + django-filter + drf-flex-fields
+    Redis Cache: django-redis
+    Task Queue: celery + django-celery-beat + django-celery-results
+    Version Control Model Objects: django-simple-history
+
+
+first off, recreate db
+    1. python manage.py collectstatic 
+    2. In .env change AZURE_POSTGRES_DATABASE_NAME
+        In .env file, swap the AZURE names to AZURE3 so loadhost works on local db
+    3. In models.py, run:
+        a. python manage.py makemigrations
+        b. python manage.py migrate
+        c. may need to --> python manage.py createsuperuser  admin;
+
+    4. Jump to Azure and Deploy to WebApp
+    5. Swap back the AZURE to AZURE3 in .env
+    6. After deployment, set up the cron and possibly the refresh data (below) 
+    7. pip freeze > requirements.txt is necessary when adding libraries
+
+
+
+FROM START--->
+
+1.  Create Directory under C
+2.  Open Command Terminal
+3.  python -m pip install Django==4.2.10
+4.  python.exe -m pip install --upgrade pip
+
+Start Project
+1.  django-admin startproject whip_website  whip_website is the project name change it
+2.  change into that directory.  The is the Django Root Directory
+3.  python manage.py startapp base  base is an app name.  Change it
+
+Set Up Virtual Environment
+1.  py -m venv .venv
+2.  .venv\scripts\activate
+3.  install pips...
+	python.exe -m pip install --upgrade pip
+	python -m pip install Django==4.2.10
+	pip install psycopg2  
+	pip install python-decouple
+	pip install gunicorn  *not convinced you need this
+	pip install whitenoise
+	pip install django_extensions
+	pip install python-dotenv
+	pip install python-dateutil
+	pip install requests
+4. python manage.py runserver (should see rocket)
+5. pip freeze > requirements.txt
+
+Set up GitHub
+1.  Set up repository in GitHub.  Follow the 7 steps below (changing for repository name)
+echo "# z_tourney_mgr" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/UK-Ratings/z_tourney_mgr.git
+git push -u origin main
+
+2.  Check if in GitHub
+
+READY TO MOVE TO VSCODE
+1. Open VSCODE to Django ROOT Directory
+2. Copy over .gitignore
+3. Open new Terminal (should be in the Django Root Directory not the parent directory)
+4. .venv\scripts\activate
+5. python manage.py runserver (should see rocket)
+6. pip freeze > requirements.txt
+7. go to source control.  Do first real commit.
+8. Before first commit, must do the following:
+        https://koenwoortman.com/python-django-email-as-username/
+        IF STARTING NEW DB...  YOU MUST BACK ANDD RESTORE VIA PGADMIN and not website!
+9. python manage.py makemigrations
+10. python manage.py migrate
+11. python manage.py createsuperuser
+
+When ready to deploy.  Look at settings.py.  Number of changes required.
+--. Configure whitenoise.
+--. python manage.py collectstatic
+
+--. python manage.py makemigrations --skip-checks
+--. python manage.py migrate --skip-checks
+
+
+
+tviewer-dev; tviewer-test; tviewer-prod 
+    DONE All require environments
+    All require DB setups
+    All require fresh restart
+        1. Connect to local DB in env
+        2. From PC, run y_admin_key_tables_backup
+        3. Connect to new DB in env
+        4. Run y_admin_key_tables_load
+        5. Connect to Azure Portal and start ssh
+        6. Run yy_full_reset_and_load
+
+
+
+
+
+in the directory...  (Django Root Directory)
+py -m venv .venv
+.venv\scripts\activate
+pip install -r requirements.txt
+python.exe -m pip install --upgrade pip
+python manage.py runserver
+
+OPEN ALL THE WAY TO ROOT DIRECTORY
+Open terminal
+run .venv\scripts\activate
+run python manage.py runserver
+
+echo "# whip_2024" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/UK-Ratings/whip_2024.git
+git push -u origin main
+
+
+echo "# whipitdrinks" >> README.md
+git init
+git add README.md
+git commit -m "first commit"
+git branch -M main
+git remote add origin https://github.com/UK-Ratings/whipitdrinks.git
+git push -u origin main
+
+
+When setting up new...  
+    Two Options:
+        run yy_full_reset_and_load.py
+        or 10, 20, 30, 40 as reset
+
+    Run http://127.0.0.1:8000/tourneys/tourneysearchunknowns/
+    Once down to zero, THEN rerun x_apply_ratings
+
+    When done - Check
+        Manual events - 584 permanent manual event final results
+        Invicta Open 2023 - Hide from Ratings
+        4 Deleted Tournaments (Public School and Commonwealth) admin_deleted_tournaments 7 lines
+        Check Discipline and Gender Report
+        Check NIFs for British Fencing Championships 2022 - 06.03.2022 - 06.03.2022
+        Check ratings against laptop!  
+            Check Rating Distros against laptop
+        Check Ratings to old UKRatings production.
+            Step 1 - Backup existing UKProd database
+            Step 2 - Loading into UKRate database locally.
+            Step 3 - Load tables ukratings_event_ratings and ukratings_member_ratings via excel and pgAdmin
+            Step 4 - Now all reports under Admin work
+
+
+
+
+    ABCNews Site
+        Background - 255, 255, 255
+        Card Title - Dark Blue 3, 14, 42    #030E2A
+        Card LIs - Gray 244, 245, 246  #F4F5F6
+        Card LI Bullets 26, 68, 210   #1A44D2
+        Footer - Dark Blue  #030E2A
+
+    Section Cards - 
+        Image
+        Section Title - Blue #A4B5ED
+        Text Black
+        Updates - Red #CC6862

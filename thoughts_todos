@@ -1,0 +1,111 @@
+Build an ecommerce website
+https://www.youtube.com/watch?v=u6R4vBa7ZK4&list=PLCC34OHNcOtpRfBYk-8y0GMO4i1p1zn50
+
+.venv\scripts\activate
+pip freeze > requirements.txt
+python manage.py makemigrations
+python manage.py migrate
+python manage.py createsuperuser
+python manage.py collectstatic
+
+white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+
+PARITY TO EXISTING SITE!
+
+    Think about jobs.  switching from 20 to load all 4 seperately.  upcoming problem...
+
+    Email on mobile
+        check for sizing
+        check for alignment
+        check font 
+
+    Final UX items...
+            Tourneys RESULTS - Elim Brackets --> Need mobile version
+                Show one at a time - From largest first
+                Use SVG version as a guide  1024, 512, 256, 128, ...
+            Show current first
+    LATER
+        Statistical Analysis...  New Section...  Club; Athlete; whatever...
+                    Analysis Sections - Club
+        APIs
+            https://medium.com/django-unleashed/token-based-authentication-and-authorization-in-django-rest-framework-user-and-permissions-347c7cc472e9
+
+        Switch Association for a Tournament
+        I think manual create a club is incorrect.  Check flow including user admin add...
+            Can you have a club without an association???  THAT is the problem...
+
+
+POST PARITY...   Now to Biggies...
+    Lock in Fencers's Rating / Close a year - No not process beyond
+        Build Mechanism to close a year (copy final ratings to table)
+
+    Build website checker - Like UptimeRobot - Send email when down based on 
+    Communications
+        fb, insta, tiktok post capabilities
+    Multi Language
+        Multi-Language - Do Spanish...  All up...
+        DB encryption
+    Now Ecommerce...
+        Shopping basket codemy on YouTube covers
+        Annual membership auto renewal 
+        Payments…
+    Now DT
+        Multiple Types of Event - Knockout, etc.
+
+    Print out pages:
+        DE Bout
+
+
+
+
+DONE...
+DONE    Static files - Get email working...
+        DONE Build emails to contain
+        Now put in flow...
+
+DONE    Possible error on images... detail
+DONE    Add Upcoming as a rotation on home screen with difficulties?
+
+DONE    Change prod start to 19:01 scheduler
+DONE    change dev and test to 7:00 scheduler
+DONE    Media files into Azure Blob Storage (and upload)
+DONE            Finish fencer image upload. 
+DONE                Upload page - Pretty
+DONE                Need to follow through athlete detail
+DONE                    Make default pic to go load pic (if logged in) 
+DONE            Home GBF left to do
+
+
+
+
+PERFORMANCE CHECK QUERIES
+
+SELECT
+    query,
+    calls,
+    total_exec_time,
+    mean_exec_time,
+    rows,
+    shared_blks_hit,
+    shared_blks_read,
+    shared_blks_dirtied,
+    shared_blks_written,
+    local_blks_hit,
+    local_blks_read,
+    local_blks_dirtied,
+    local_blks_written,
+    temp_blks_read,
+    temp_blks_written,
+    blk_read_time,
+    blk_write_time
+FROM
+    pg_stat_statements
+order by mean_exec_time desc
+limit 20;
+
+
+SELECT ee.* 
+FROM public.tourneys_event_final_results efr, tourneys_events ee, tourneys_tournaments tt
+where efr.efr_event_id = ee.id
+and ee.ev_tourney_id = tt.id
+
