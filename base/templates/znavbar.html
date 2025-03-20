@@ -1,0 +1,213 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<body>
+    <!-- Sticky navbar for large screens -->
+    <header class="sticky-top shadow d-none d-lg-block">
+      <nav class="navbar navbar-expand-lg navbar-dark uk-dark-blue">
+          <div class="container-fluid">
+              <a title="Tournament Manager" href="{% url 'base-home' %}" class="text-decoration-none">
+                  <span class="nav-logo"><img src="{% static 'images/site/results.jpg' %}"></span></a>  
+              {% if navbar_title_content %}
+              <div class="navbar-container" style="margin-left:10px; padding-top:0px; padding-bottom:0px;">
+                  <a class="navbar-brand text-uppercase" style="color: var(--gbr-red);padding:0px; margin-bottom:0px; line-height: 1;" href="{{ navbar_title_content.1 }}">{{ navbar_title_content.0 }}</a>
+                  {% if navbar_title_content.2 %}
+                      <h5 class="navbar-brand text-uppercase" style="font-size: 16px; margin-bottom:0px; padding:0px; margin-top:0px; line-height: 1;">
+                          {{ navbar_title_content.2 }}
+                      </h5>
+                  {% endif %}
+                  {% if navbar_title_content.4 %}
+                      <h5 class="navbar-brand d-none d-md-block" style="font-size: 12px; margin-bottom:0px; padding:0px; margin-top:0px; line-height: 1;">
+                          {{ navbar_title_content.4 }}
+                      </h5>
+                  {%endif%}
+              </div>
+              {% else %}
+                  <a class="navbar-brand text-uppercase" style="font-weight:normal" href="{% url 'base-home' %}">UK RATINGS PILOT</a>
+              {% endif %}  
+              <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#collapsibleNavbar"><span class="navbar-toggler-icon"></span></button>
+              <div class="collapse navbar-collapse" id="collapsibleNavbar">
+                  <ul class="navbar-nav ms-auto mb-2 mb-lg-0">
+                      {% if user.is_authenticated %}
+                          <li class="nav-item"><a class="nav-link active" href="{% url 'base-user-home' %}">
+                              Hello {{user.first_name}} </a></li>
+                      {% else %}
+                          <li class="nav-item"><a class="nav-link" href="{% url 'base-login' %}">Login/Register</a></li>
+                      {%endif%}      
+                  </ul>
+              </div>
+          </div>
+      </nav>
+    </header>
+  
+    <!-- Non-sticky navbar for small screens -->
+    <header class="shadow d-lg-none" style="width: 100%; max-width: 100%;">
+        <nav class="navbar navbar-expand-lg navbar-dark uk-dark-blue" style="width: 100%; max-width: 100%;">
+            <div class="container-fluid d-flex align-items-start" style="width: 100%; max-width: 100%;">
+                <a title="Tournament Manager" href="{% url 'base-home' %}" class="text-decoration-none d-flex align-items-center">
+                    <span class="nav-logo"><img src="{% static 'images/site/results.jpg' %}" style="padding-right: 10px;"></span>
+                    <div class="d-flex flex-column">
+                        <span class="navbar-brand text-uppercase" style="font-weight:normal; margin-left: 5px;">UK RATINGS PILOT</span>
+                        {% if user.is_authenticated %}
+                            <span class="navbar-brand" style="font-weight:normal; padding:0px; margin-top:0px; margin-left: 5px;">Hello {{user.first_name}}</span>
+                        {% endif %}
+                    </div>                
+                </a>
+                {% if navbar_title_content %}
+                <div class="navbar-container" style="margin-left:5px; padding-top:0px; padding-bottom:0px; width: 100%; max-width: 100%;">
+                    <a class="navbar-brand text-uppercase" style="color: var(--gbr-red);padding:0px; margin-bottom:0px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" href="{{ navbar_title_content.1 }}">{{ navbar_title_content.0 }}</a>
+                    {% if navbar_title_content.2 %}
+                        <h5 class="navbar-brand text-uppercase" style="font-size: 16px; margin-bottom:0px; padding:0px; margin-top:0px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {{ navbar_title_content.2 }}
+                        </h5>
+                    {% endif %}
+                    {% if navbar_title_content.4 %}
+                        <h5 class="navbar-brand d-none d-md-block" style="font-size: 12px; margin-bottom:0px; padding:0px; margin-top:0px; line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">
+                            {{ navbar_title_content.4 }}
+                        </h5>
+                    {%endif%}
+                </div>
+            {% endif %}  
+            </div>
+        </nav>
+    </header>
+      
+  <!-- Side navbar for medium+ screens -->
+  <div class="navbar-side d-none d-lg-block">
+      <ul>
+        <li class="navbar-side-item"><a href="{% url 'base-home' %}">
+            <img src="{% static 'images/site/home-page-50.svg' %}" title="Home Page" alt="Home Page" class="navbar-side-svg">
+        </a></li>
+        <li class="navbar-side-item"><a href="{% url 'base-search' %}">
+                <img src="{% static 'images/site/search-50.svg' %}" title="Search" alt="Search" class="navbar-side-svg">
+            </a></li>
+            {% if user.is_authenticated%}
+                <li class="navbar-side-item"><a href="{% url 'base-login' %}">
+                    <img src="{% static 'images/site/enter-50.svg' %}" title="Logout" alt="Logout" class="navbar-side-svg">
+                </a></li>
+            {%else%}
+                <li class="navbar-side-item" style="background-color: var(--gbr-red);"><a href="{% url 'base-login' %}">
+                    <img src="{% static 'images/site/enter-50.svg' %}" title="Logout" alt="Logout" class="navbar-side-svg">
+                </a></li>
+            {%endif%}
+
+            {% if user.is_authenticated%}
+                {% if not user_licenses %}
+                    <li class="navbar-side-item" style="background-color: var(--gbr-red);"><a href="{% url 'base-update-user-licenses' %}">
+                        <img src="{% static 'images/site/add.svg' %}" title="Add License" alt="Add License" class="navbar-side-svg">
+                    </a></li>
+                {%else%}
+                    <li class="navbar-side-item"><a href="{% url 'base-user-home' %}">
+                        <img src="{% static 'images/site/man-50.svg' %}" title="Logout" alt="Logout" class="navbar-side-svg">
+                    </a></li>    
+                {%endif%}
+            {%endif%}
+        
+          <li class="navbar-side-lined-item"><a href="{% url 'tourneys-tourney-home' %}">
+              <img src="{% static 'images/site/tournament-50.svg' %}" title="Tournaments" alt="Tournaments" class="navbar-side-svg">
+          </a></li>
+          <li class="navbar-side-lined-item"><a href="{% url 'tourneys-athlete-h2h' %}">
+            <img src="{% static 'images/site/head-to-head-50.svg' %}" title="Compare Fencers" alt="Compare Fencers" class="navbar-side-svg">
+          </a></li>
+  
+          <li class="navbar-side-item"><a href="{% url 'assn_mgr-assn-home' %}">
+              <img src="{% static 'images/site/multicultural-people-50.svg' %}" title="Associations" alt="Associations" class="navbar-side-svg">
+          </a></li>
+          <li class="navbar-side-lined-item"><a href="{% url 'club_mgr-club-home' %}">
+              <img src="{% static 'images/site/user-groups-50.svg' %}" title="Clubs" alt="Clubs" class="navbar-side-svg">
+          </a></li>
+
+
+<!--          <li class="navbar-side-lined-item"><a href="{% url 'tourneys-event-difficulty' %}">
+              <img src="{% static 'images/site/pencil-50.svg' %}" title="TEST Event Difficulty" alt="Event Difficulty" class="navbar-side-svg">
+          </a></li>  -->
+
+          {% if user.is_authenticated and user.is_superuser %}
+            <li class="navbar-side-lined-item"><a href="{% url 'base-emailview' %}">
+                <img src="{% static 'images/site/document-50.svg' %}" title="View Email" alt="View Email" class="navbar-side-svg">
+            </a></li>
+            <li class="navbar-side-lined-item"><a href="{% url 'base-emailtest' %}">
+                <img src="{% static 'images/site/document-50.svg' %}" title="Send Email" alt="Send Email" class="navbar-side-svg">
+            </a></li>
+            <li class="navbar-side-item"><a href="{% url 'tourneys-search-unknowns' %}">
+                <img src="{% static 'images/site/search-50.svg' %}" title="Unknowns" alt="Unknowns" class="navbar-side-svg">
+            </a></li>
+<!--                <li class="navbar-side-item"><a href="{% url 'tourneys-compare-prod' %}">
+                    <img src="{% static 'images/site/numbers-50.svg' %}" title="Compare Event Ratings" alt="Compare Event Ratings" class="navbar-side-svg">
+                    </a></li>
+                    <li class="navbar-side-item"><a href="{% url 'tourneys-compare-prod-members' %}">
+                        <img src="{% static 'images/site/numbers-50.svg' %}" title="Compare Member Ratings" alt="Compare Member Ratings" class="navbar-side-svg">
+                        </a></li>  -->
+                      <li class="navbar-side-lined-item"><a href="{% url 'base-logs' %}">
+                  <img src="{% static 'images/site/format-50.svg' %}" title="Logs" alt="Logs" class="navbar-side-svg">
+              </a></li>
+          {% endif %}
+      </ul>
+  </div>  
+  
+  
+  <!-- Floating navbar for small screens -->
+  <div class="floating-navbar d-md-none" style="width: 100%; max-width: 100%;">
+    <ul class="navbar-nav d-flex flex-row justify-content-around w-100">
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'base-search' %}">
+                <img src="{% static 'images/site/search-50.svg' %}" title="Search" alt="Search" class="floating-navbar-svg">
+            </a>
+        </li>
+        {% if user.is_authenticated%}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'base-login' %}">
+                    <img src="{% static 'images/site/enter-50.svg' %}" title="Login/Logout" alt="Login/Logout" class="floating-navbar-svg">
+                </a>
+            </li>
+        {%else%}
+            <li class="nav-item" style="background-color: var(--gbr-red);padding-left:10px;padding-right:10px;">
+                <a class="nav-link" href="{% url 'base-login' %}">
+                    <img src="{% static 'images/site/enter-50.svg' %}" title="Login/Logout" alt="Login/Logout" class="floating-navbar-svg">
+                </a>
+            </li>
+        {%endif%}
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'tourneys-tourney-home' %}">
+                <img src="{% static 'images/site/tournament-50.svg' %}" title="Tournaments" alt="Tournaments" class="floating-navbar-svg">
+            </a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'tourneys-athlete-h2h' %}">
+                <img src="{% static 'images/site/head-to-head-50.svg' %}" title="Compare Fencers" alt="Compare Fencers" class="floating-navbar-svg">
+            </a>
+        </li>
+        {% if user.is_authenticated%}
+            {% if not user_licenses %}
+            <li class="nav-item" style="background-color: var(--gbr-red);padding-left:10px;padding-right:10px;">
+                <a class="nav-link" href="{% url 'base-update-user-licenses' %}">
+                    <img src="{% static 'images/site/add.svg' %}" title="Licenses" alt="Licenses" class="floating-navbar-svg">
+                </a>
+            </li>
+            {%else%}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'base-user-home' %}">
+                    <img src="{% static 'images/site/man-50.svg' %}" title="User" alt="User" class="floating-navbar-svg">
+                </a>
+            </li>
+            {%endif%}
+        {%endif%}
+        {% if user.is_authenticated and user.is_superuser %}
+            <li class="nav-item">
+                <a class="nav-link" href="{% url 'base-user-home' %}">
+                    <img src="{% static 'images/site/engine-50.svg' %}" title="Admin" alt="Admin" class="floating-navbar-svg">
+                </a>
+            </li>
+        {%endif%}
+        <li class="nav-item">
+            <a class="nav-link" href="{% url 'base-home' %}">
+                <img src="{% static 'images/site/home-page-50.svg' %}" title="Home" alt="Home" class="floating-navbar-svg">
+            </a>
+        </li>
+    </ul>
+</div>
+  
+  </body>
+  </html>
+

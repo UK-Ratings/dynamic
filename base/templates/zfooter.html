@@ -1,0 +1,32 @@
+{% load static %}
+<!DOCTYPE html>
+<html>
+
+<style>
+  .footer-social-link {
+    color: #fff;
+    font-size: 2.0em;
+    margin: 0 0.5em;
+  }
+  .footer-link {
+    text-decoration: none;
+    color: var(--gbr-white);
+    font-size: 20px;
+    text-align: center;
+  }
+</style>
+
+<footer>
+  <div class="first-info main-content">  
+    <div class="footer-background-color" style="padding-bottom: 50px;">  
+      <div class="col-12">
+        <h3 class="footer-text mt-2"> Dynamic Pricing Prototype</h3>
+
+        {% if manage_create_date%}<h5 style="color: white;margin-left: 20px;">{{manage_create_date}}</h5>{%endif%}
+      </div>
+    </div>
+  </div>
+</footer>
+  
+  <script src="{% static 'js/footeryear.js' %}"></script>
+ 
