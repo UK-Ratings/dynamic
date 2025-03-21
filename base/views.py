@@ -19,6 +19,7 @@ from base.models import *
 from users.models import *
 
 from scripts.aaa_helper_functions import * 
+from scripts.aaa_reset_and_load import *
 
 
 def base_home(request):
@@ -50,73 +51,6 @@ def base_home(request):
 
 
 
-def zzzbase_venue(request):
-#    record_page_data("base-view.py", "base_home", request)    
-    messages_to_display=[]
-    messages_to_display.append(('Made it to venue','warning'))
-    record_message(request, "base-view.py", "base_venue", messages_to_display)
-
-    floor_length = 60
-    floor_width = 30
-
-# Create a grid using Matplotlib
-    fig, ax = plt.subplots()
-    ax.plot([0, 1], [0, 1], marker='o')
-    ax.grid(True)
-
-    # Save the plot to a BytesIO object
-    buf = io.BytesIO()
-    plt.savefig(buf, format='png')
-    buf.seek(0)
-    string = base64.b64encode(buf.read())
-    uri = urllib.parse.quote(string)
-
-    return render(request, 'venue.html', {
-        'data': uri,
-        })
-
-
-
-def yyybase_venue(request):
-#    record_page_data("base-view.py", "base_home", request)    
-    messages_to_display=[]
-    messages_to_display.append(('Made it to venue','success'))
-    record_message(request, "base-view.py", "base_venue", messages_to_display)
-
-    floor_length = 6
-    floor_height = 3
-
-    # Create a grid using Matplotlib with a white background and outlined squares
-    z = [[1 for _ in range(floor_length)] for _ in range(floor_height)]
-
-    fig, ax = plt.subplots()
-    ax.imshow(z, cmap='gray', interpolation='none', vmin=1, vmax=1)
-
-    # Set the overall grid background to white
-    fig.patch.set_facecolor('white')
-
-    # Add lines between each row and column to outline each square
-    for i in range(floor_height+1):
-        ax.axhline(i-0.5, color='black', linewidth=0.1)
-    for j in range(floor_length+1):
-        ax.axvline(j-0.5, color='black', linewidth=0.1)
-
-    # Remove x and y axis descriptions
-    ax.set_xticks([])
-    ax.set_yticks([])
-
-    pyplot_file = ""
-    erase_files_in_dir('images')
-
-    for i in range(10):
-        pyplot_file = write_pyplot_to_file(plt, 'images')
-
-    create_mov_from_images('images', 'output.mp4')
-
-    return render(request, 'venue.html', {
-        'pyplot_file': pyplot_file,
-        })
-
 
 def base_venue(request):
 #    record_page_data("base-view.py", "base_home", request)    
@@ -124,41 +58,12 @@ def base_venue(request):
     messages_to_display.append(('Made it to venue','success'))
     record_message(request, "base-view.py", "base_venue", messages_to_display)
 
-    floor_length = 60
-    floor_height = 30
+    reset_test_data()
+    populate_for_test()
 
-    # Create a grid using Matplotlib with a white background and outlined squares
-    z = [[1 for _ in range(floor_length)] for _ in range(floor_height)]
-
-    fig, ax = plt.subplots()
-    ax.plot([0, 1], [0, 1], marker='o')
-    ax.grid(True)
-
-
-#    fig, ax = plt.subplots()
-#    ax.imshow(z, cmap='gray', interpolation='none', vmin=1, vmax=1)
-#    fig.patch.set_facecolor('red')
-
-#    # Add lines between each row and column to outline each square
-#    for i in range(floor_height+1):
-#        ax.axhline(i-0.5, color='blue', linewidth=1)
-#    for j in range(floor_length+1):
-#        ax.axvline(j-0.5, color='green', linewidth=1)
-
-
-    # Remove x and y axis descriptions
-    ax.set_xticks([])
-    ax.set_yticks([])
-
-    pyplot_file = ""
-    erase_files_in_dir('images')
-    pyplot_filename, pyplot_path = write_pyplot_to_file(plt, 'images')
-    print("pyplot_path: ", pyplot_path)
-
-#    create_mov_from_images('images', 'output.mp4')
-
+    pyplot_filename = render_floorplan()
     return render(request, 'venue.html', {
-        'pyplot_path': pyplot_path,
+        'pyplot_filename': pyplot_filename,
         })
 
 
