@@ -225,6 +225,69 @@ def simulate_profit_demand_chart(prices, demands):
     ax.set_ylabel('Profit')
     return fig, ax
 
+def simple_render_floorplan():
+
+        st_timezone = timezone.now()
+        cdatetime = str(st_timezone).replace(" ", "").replace(":", "").replace("+", "")
+        header_set = []
+        footer_set = []
+
+        header_set.append("ISC West 2025")
+        header_set.append("Las Vegas, NV")
+
+#eventually add to render call
+        footer_set.append("ISC West 2025")
+        footer_set.append("Las Vegas, NV")
+
+#eventually store with the event
+        floor_length = 1060
+        floor_height = 720
+
+        header_margin, footer_margin, left_margin, right_margin, image_multiplier, static_loc = get_env_values()
+
+        section_one_length = left_margin+floor_length
+        section_two_length = right_margin
+        total_image_length = left_margin+floor_length+right_margin
+        total_image_height = header_margin+floor_height+footer_margin
+
+        image_length = int(total_image_length * image_multiplier / 100)
+        image_height = int(total_image_height * image_multiplier / 100)
+        image_header_height = int(header_margin * image_multiplier / 100)
+        section_one_image_length = int((left_margin+floor_length) * image_multiplier / 100)
+        section_two_image_length = int((right_margin) * image_multiplier / 100)
+
+ 
+        print("image_length: ", image_length)
+        print("image_height: ", image_height)
+        print("image_header_height: ", image_header_height)
+        print("section_one_image_length: ", section_one_image_length)
+        print("section_two_image_length: ", section_two_image_length)
+
+        data1 = np.random.rand(6, 35)
+        data2 = np.random.rand(2, 39)
+        data3 = np.random.rand(2, 120)
+
+        fig = plt.figure(figsize =([12, 8]))    #x, y
+        gs = gridspec.GridSpec(8, 12, figure = fig)     #y, x
+        gs.update(wspace = 0, hspace = 0)
+        ax1 = plt.subplot(gs[0:4, 0:4])         #y, x
+        ax1.set_ylabel('ylabel', labelpad = 0, fontsize = 12)
+        ax2 = plt.subplot(gs[4:8, 4:8])
+        ax2.set_ylabel('blah', labelpad = 0, fontsize = 12)
+        ax3 = plt.subplot(gs[0:4, 8:12])
+        ax3.set_ylabel('blah2', labelpad = 0, fontsize = 12)
+
+#when running entire, this will need to go into calling function.
+        erase_files_in_dir(static_loc)
+
+        pyplot_filename, pyplot_path = write_pyplot_to_file(plt, static_loc, cdatetime)
+        pyplot_filename = pyplot_filename + '.png'
+
+#    create_mov_from_images('images', 'output.mp4')
+        return pyplot_filename
+
+
+
 def wwwrender_floorplan():
 
         st_timezone = timezone.now()
@@ -353,6 +416,8 @@ def yyyrender_floorplan():
 
     return pyplot_filename
 
+
+
 def print_ax_size(fig, gs, ax, from_def):
         print(f"{from_def}... ")
         print(f"   fig: length {fig.get_size_inches()[0]} inches, height {fig.get_size_inches()[1]} inches")
@@ -367,74 +432,13 @@ def print_ax_size(fig, gs, ax, from_def):
                 print(f"   ax: None")
 
 
-def simple_render_floorplan():
-
-        st_timezone = timezone.now()
-        cdatetime = str(st_timezone).replace(" ", "").replace(":", "").replace("+", "")
-        header_set = []
-        footer_set = []
-
-        header_set.append("ISC West 2025")
-        header_set.append("Las Vegas, NV")
-
-#eventually add to render call
-        footer_set.append("ISC West 2025")
-        footer_set.append("Las Vegas, NV")
-
-#eventually store with the event
-        floor_length = 1060
-        floor_height = 720
-
-        header_margin, footer_margin, left_margin, right_margin, image_multiplier, static_loc = get_env_values()
-
-        section_one_length = left_margin+floor_length
-        section_two_length = right_margin
-        total_image_length = left_margin+floor_length+right_margin
-        total_image_height = header_margin+floor_height+footer_margin
-
-        image_length = int(total_image_length * image_multiplier / 100)
-        image_height = int(total_image_height * image_multiplier / 100)
-        image_header_height = int(header_margin * image_multiplier / 100)
-        section_one_image_length = int((left_margin+floor_length) * image_multiplier / 100)
-        section_two_image_length = int((right_margin) * image_multiplier / 100)
-
- 
-        print("image_length: ", image_length)
-        print("image_height: ", image_height)
-        print("image_header_height: ", image_header_height)
-        print("section_one_image_length: ", section_one_image_length)
-        print("section_two_image_length: ", section_two_image_length)
-
-        data1 = np.random.rand(6, 35)
-        data2 = np.random.rand(2, 39)
-        data3 = np.random.rand(2, 120)
-
-        fig = plt.figure(figsize =([12, 8]))    #x, y
-        gs = gridspec.GridSpec(8, 12, figure = fig)     #y, x
-        gs.update(wspace = 0, hspace = 0)
-        ax1 = plt.subplot(gs[0:4, 0:4])         #y, x
-        ax1.set_ylabel('ylabel', labelpad = 0, fontsize = 12)
-        ax2 = plt.subplot(gs[4:8, 4:8])
-        ax2.set_ylabel('blah', labelpad = 0, fontsize = 12)
-        ax3 = plt.subplot(gs[0:4, 8:12])
-        ax3.set_ylabel('blah2', labelpad = 0, fontsize = 12)
-
-#when running entire, this will need to go into calling function.
-        erase_files_in_dir(static_loc)
-
-        pyplot_filename, pyplot_path = write_pyplot_to_file(plt, static_loc, cdatetime)
-        pyplot_filename = pyplot_filename + '.png'
-
-#    create_mov_from_images('images', 'output.mp4')
-        return pyplot_filename
-
 def new_place_header(fig, gs, image_margin, header_space, image_length, image_multiplier, header_set):
         ax_upper_x = image_margin * image_multiplier
         ax_upper_y = ax_upper_x
         ax_height = (image_margin+header_space) * image_multiplier
         ax_width = (image_length-(image_margin*2)) * image_multiplier
         ax = fig.add_subplot(gs[ax_upper_y:ax_height, ax_upper_x:ax_width])  # Use the entire grid for the main plot
-        print_ax_size(fig, gs, ax, "new_place_header")
+#        print_ax_size(fig, gs, ax, "new_place_header")
 
         # Set the limits of the plot
         ax.set_xlim(0, ax_width)
@@ -487,7 +491,7 @@ def create_outer_square(fig, gs, plt_length, plt_height, image_multiplier):
         test_text = None
         ax = new_place_rectangle(ax, 0, 0, plt_length*image_multiplier, plt_height*image_multiplier, image_multiplier, '#ffffff', '#ffffff', test_text, '#000000')
         return(fig)
-def create_floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier):
+def zzz_create_floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier):
         ax_upper_x = image_margin * image_multiplier
         ax_upper_y = ((image_margin*2) + header_space) * image_multiplier
         ax_height = (image_height - (image_margin*2) - header_space - footer_space) * image_multiplier
@@ -495,7 +499,7 @@ def create_floorplan_subplot(fig, gs, image_margin, header_space, footer_space, 
 #        print(ax_upper_x, ax_upper_y, ax_height, ax_width)
  
         ax = fig.add_subplot(gs[ax_upper_y:ax_height, ax_upper_x:ax_width])  # Use the entire grid for the main plot
-        print_ax_size(fig, gs, ax, "create_floorplan_subplot")
+#        print_ax_size(fig, gs, ax, "create_floorplan_subplot")
 
         # Set the limits of the plot
         ax.set_xlim(0, ax_width)
@@ -512,7 +516,7 @@ def create_analysis1_subplot(fig, gs, image_margin, header_space, footer_space, 
         ax_width = int(((image_length)-(image_margin*2))/4) * image_multiplier
  
         ax = fig.add_subplot(gs[ax_upper_y:ax_height, ax_upper_x:ax_upper_x+ax_width])  # Use the entire grid for the main plot
-        print_ax_size(fig, gs, ax, "create_analysis1_subplot")
+#        print_ax_size(fig, gs, ax, "create_analysis1_subplot")
 
 #        # Set the limits of the plot
         ax.set_xlim(0, ax_width)
@@ -578,6 +582,43 @@ def create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, 
         return(fig)
 
 
+
+
+
+
+
+
+
+def new_place_isles(ax, image_multiplier):
+        isle_color = '#D8D8D8'
+#        new_place_rectangle(ax, 10, 310, 1030, -10, image_multiplier, isle_color, isle_color, "Isle Name", 'black', 10, 10)
+#        new_place_rectangle(ax, 10, 260, 400, -10, image_multiplier, isle_color, isle_color, "Isle Name", 'black', 10, 10)
+        ax = new_place_rectangle(ax, 10, 310, 1030, 10, 
+                         image_multiplier, '#000000', '#000000', None, '#000000')
+
+
+        return ax
+
+def create_floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier):
+        ax_upper_x = image_margin * image_multiplier
+        ax_upper_y = ((image_margin*2) + header_space) * image_multiplier
+        ax_height = (image_height - (image_margin*2) - header_space - footer_space) * image_multiplier
+        ax_width = int(((image_length)-(image_margin*2))/4)*3 * image_multiplier
+#        print(ax_upper_x, ax_upper_y, ax_height, ax_width)
+ 
+        ax = fig.add_subplot(gs[ax_upper_y:ax_height, ax_upper_x:ax_width])  # Use the entire grid for the main plot
+        print_ax_size(fig, gs, ax, "create_floorplan_subplot")
+
+        # Set the limits of the plot
+        ax.set_xlim(0, ax_width)
+        ax.set_ylim(0, ax_height)
+        ax.axis('off')
+        ax = new_place_isles(ax, image_multiplier)
+        test_text = None
+        ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
+                         image_multiplier, '#ffffff', '#000000', test_text, '#000000')
+        ax = new_place_isles(ax, image_multiplier)
+        return(fig)
 
 
 def render_floorplan():
