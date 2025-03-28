@@ -46,6 +46,34 @@ class log_messages(models.Model):
 
 class rx_event(models.Model):
     re_name = models.CharField("RX Event Name", max_length=300)
+    re_floor_length = models.IntegerField("RX Event Floor Length", blank=True, null=True)
+    re_floor_height = models.IntegerField("RX Event Floor Height", blank=True, null=True)
+
+class event_sales_transactions(models.Model):
+    est_event = models.ForeignKey(rx_event, blank=True, null=True, on_delete=models.CASCADE)
+    est_Company_Name = models.CharField("Company Name", max_length=300, blank=True, null=True, )
+    est_Recipient_Country = models.CharField("Recipient Country", max_length=300, blank=True, null=True, )
+    est_Customer_Type = models.CharField("Customer Type", max_length=300, blank=True, null=True, )
+    est_Opportunity_Type = models.CharField("Opportunity Type", max_length=300, blank=True, null=True, )
+    est_Opportunity_Owner = models.CharField("Opportunity Owner", max_length=300, blank=True, null=True, )
+    est_Stand_Name_Length_Width = models.CharField("Stand Name Length Width", max_length=300, blank=True, null=True, )
+    est_Stand_Name_Cleaned = models.CharField("Stand Name Cleaned", max_length=300, blank=True, null=True, )
+    est_Stand_Name_Dim_Cleaned = models.CharField("Stand Name Cleaned", max_length=300, blank=True, null=True, )
+    est_Stand_Area = models.CharField("Stand Area", max_length=300, blank=True, null=True, )
+    est_Number_of_Corners = models.CharField("Number of Corners", max_length=300, blank=True, null=True, )
+    est_Stand_Zone = models.CharField("Stand Zone", max_length=300, blank=True, null=True, )
+    est_Floor_Plan_Sector = models.CharField("Floor Plan Sector", max_length=300, blank=True, null=True, )
+    est_Sharer_Entitlements = models.CharField("Sharer Entitlements", max_length=300, blank=True, null=True, )
+    est_Sharer_Companies = models.CharField("Sharer Companies", max_length=300, blank=True, null=True, )
+    est_Last_Modified_Date = models.DateTimeField("Last Modified Date", blank=True, null=True)
+    est_Total_Net_Amount = models.CharField("Total Net Amount", max_length=300, blank=True, null=True, )
+    est_Order_Created_Date = models.DateTimeField("Order Created Date", blank=True, null=True)
+    est_Packages_Sold = models.CharField("Packages Sold", max_length=300, blank=True, null=True, )
+    est_Product_Name = models.CharField("Product Name", max_length=300, blank=True, null=True, )
+
+
+
+
 
 class stands(models.Model):
     s_id = models.IntegerField(null=True, blank=True)
@@ -55,6 +83,13 @@ class stands(models.Model):
     s_stand_fill_color = models.CharField("s_stand_fill_color", max_length=50, blank=True, null=True, )
     s_stand_outline_color = models.CharField("s_stand_outline_color", max_length=50, blank=True, null=True, )
     s_text_color = models.CharField("stand text color", max_length=50, blank=True, null=True, )
+    class Meta:
+        indexes = [
+            models.Index(fields=['s_rx_event','s_number'], name='stand_index1'),
+            models.Index(fields=['s_rx_event','s_name'], name='stand_index2'),
+            ]
+
+
 
 class stand_location(models.Model):
     sl_stand = models.ForeignKey(stands, blank=True, null=True, on_delete=models.CASCADE)

@@ -11,6 +11,7 @@ from django.conf import settings
 import plotly.graph_objects as go
 import matplotlib.pyplot as plt
 import io
+import glob
 import base64
 import urllib
 import cv2
@@ -54,14 +55,25 @@ def base_home(request):
 
 def base_venue(request):
 #    record_page_data("base-view.py", "base_home", request)    
+    record_log_data("base.views.py", "base_venue", "starting...")
     messages_to_display=[]
     messages_to_display.append(('Made it to venue','success'))
     record_message(request, "base-view.py", "base_venue", messages_to_display)
 
-    reset_test_data()
-    populate_for_test()
 
-    pyplot_filename = render_floorplan()
+#    reset_test_data()
+#    populate_for_test()
+    run_event_year()
+    pyplot_filename = None
+    if os.environ.get("RX_STATIC_FLOORPLAN_LOCATION") is not None:
+            static_floorplan_loc = str(os.environ.get("RX_STATIC_FLOORPLAN_LOCATION"))
+            dumps_dir = os.path.join(settings.BASE_DIR, 'static/'+static_floorplan_loc)
+            list_of_files = glob.glob(os.path.join(dumps_dir, '*'))  # Get all files in the directory
+            if list_of_files:
+                newest_file = max(list_of_files, key=os.path.getctime)  # Get the newest file by creation time
+                pyplot_filename = os.path.basename(newest_file)  # Extract the filename
+
+    record_log_data("base.views.py", "base_venue", "completed...")
     return render(request, 'venue.html', {
         'pyplot_filename': pyplot_filename,
         })

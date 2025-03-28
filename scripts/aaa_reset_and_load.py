@@ -6,6 +6,9 @@ import os
 from dotenv import load_dotenv
 from django.conf import settings
 from django.db.models import Max
+import numpy as np
+import pandas as pd
+from pandas._libs.tslibs.nattype import NaTType
 
 from base.models import *
 from scripts.aaa_helper_functions import *
@@ -24,12 +27,12 @@ def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
         sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
                                 'sl_x':x, 'sl_y':y, 'sl_x_length':x_length, 'sl_y_length':y_length})
 
-
 def populate_for_test():
 #        f.write("populate_for_test: " + str(timezone.now()) + "\n")
-        record_log_data("aaa_load_test_data.py", "populate_for_test", "populate_for_test")
+#        record_log_data("aaa_load_test_data.py", "populate_for_test", "populate_for_test")
 
-        eve = rx_event.objects.update_or_create(re_name='ISC West 2025')
+        eve = rx_event.objects.update_or_create(re_name='ISC West 2025', defaults={
+                're_floor_length': 1080, 're_floor_height': 720})
 
         if(1==1):  #row 7
                 row_amt = 300
@@ -78,16 +81,16 @@ def populate_for_test():
                 create_stand(eve, 'Stand 6', '6', 210, (row_amt - 10), 10, -10)
                 create_stand(eve, 'Stand 7', '7', 210, (row_amt - 20), 10, -20)
 
-                create_stand(eve, 'Stand 1', '1', 230, (row_amt - 0), 40, -40)
-                create_stand(eve, 'Stand 1', '1', 280, (row_amt - 0), 30, -40)
-                create_stand(eve, 'Stand 1', '1', 320, (row_amt - 0), 80, -40)
-                create_stand(eve, 'Stand 1', '1', 410, (row_amt - 0), 100, -50)
-                create_stand(eve, 'Stand 1', '1', 520, (row_amt - 0), 60, -50)
-                create_stand(eve, 'Stand 1', '1', 590, (row_amt - 0), 40, -50)
-                create_stand(eve, 'Stand 1', '1', 640, (row_amt - 0), 30, -50)
-                create_stand(eve, 'Stand 1', '1', 680, (row_amt - 0), 30, -50)
-                create_stand(eve, 'Stand 1', '1', 720, (row_amt - 0), 30, -40)
-                create_stand(eve, 'Stand 1', '1', 760, (row_amt - 0), 30, -30)
+                create_stand(eve, 'HID', '8053', 230, (row_amt - 0), 40, -40)
+                create_stand(eve, 'ASSA ABLOY Entrance Systems', '10053', 280, (row_amt - 0), 30, -40)
+                create_stand(eve, 'Bosch Security and Safety Systems', '11053', 320, (row_amt - 0), 80, -40)
+                create_stand(eve, 'AXis Communications Inc', '14051', 410, (row_amt - 0), 100, -50)
+                create_stand(eve, 'Milestone Systems', '18053', 520, (row_amt - 0), 60, -50)
+                create_stand(eve, 'Everon - Nationwide Commercial Security, Fire, and', '20051', 590, (row_amt - 0), 40, -50)
+                create_stand(eve, 'TP-Link Systems Inc.', '22053', 640, (row_amt - 0), 30, -50)
+                create_stand(eve, 'Stid - Smarter Security Answers', '23051', 680, (row_amt - 0), 30, -50)
+                create_stand(eve, 'Allegion', '25053', 720, (row_amt - 0), 30, -40)
+                create_stand(eve, 'Affiliated Monitoring, Inc.', '26055', 760, (row_amt - 0), 30, -30)
 
                 create_stand(eve, 'Stand 1', '1', 800, (row_amt - 0), 20, -10)
                 create_stand(eve, 'Stand 1', '1', 830, (row_amt - 0), 20, -30)
@@ -119,34 +122,121 @@ def populate_for_test():
                 create_stand(eve, 'Stand 5', '5', 1020, (row_amt - 0), 10, -10)
 
         if(1==1):  #row 7
-                create_stand(eve, 'Stand 1', '1', 590, 240, 40, -40)
-                create_stand(eve, 'Stand 1', '1', 590, 190, 40, -30)
-                create_stand(eve, 'Stand 1', '1', 590, 160, 40, -30)
-                create_stand(eve, 'Stand 1', '1', 590, 120, 40, -40)
-                create_stand(eve, 'Stand 1', '1', 590, 70, 40, -40)
-                create_stand(eve, 'Stand 1', '1', 590, 20, 40, -10)
+                create_stand(eve, 'Dorking Inc DKS', '20043', 590, 240, 40, -40)
+                create_stand(eve, 'Eagle Eye Networks', '20037', 590, 190, 40, -30)
+                create_stand(eve, 'Brivo', '20031', 590, 160, 40, -30)
+                create_stand(eve, 'Wesco', '20017', 590, 120, 40, -40)
+                create_stand(eve, 'dormakaba', '20007', 590, 70, 40, -40)
+                create_stand(eve, 'CDVI Americas', '20001', 590, 20, 40, -10)
 
         if(1==1):  #row 7
-                create_stand(eve, 'Stand 1', '1', 640, 310, 30, 30)
-                create_stand(eve, 'Stand 1', '1', 640, 350, 30, 30)
-                create_stand(eve, 'Stand 1', '1', 640, 390, 30, 40)
-                create_stand(eve, 'Stand 1', '1', 640, 440, 40, 20)
-                create_stand(eve, 'Stand 1', '1', 640, 460, 40, 20)
-                create_stand(eve, 'Stand 1', '1', 640, 490, 30, 30)
+                create_stand(eve, 'Speco Technologies', '22059', 640, 310, 30, 30)
+                create_stand(eve, '3xLogic', '22067', 640, 350, 30, 30)
+                create_stand(eve, 'Suprema', '22075', 640, 390, 30, 40)
+                create_stand(eve, 'Qualvision Technology Co. Ltd', '22093', 640, 440, 40, 20)
+                create_stand(eve, 'Lounge', '22095', 640, 460, 40, 20)
+                create_stand(eve, '3Si', '22099', 640, 490, 30, 30)
 
-                create_stand(eve, 'Stand 1', '1', 655, 540, 20, 30)
-                create_stand(eve, 'Stand 1', '1', 655, 580, 20, 30)
-                create_stand(eve, 'Stand 1', '1', 655, 620, 20, 20)
-                create_stand(eve, 'Stand 1', '1', 655, 650, 20, 20)
-                create_stand(eve, 'Stand 1', '1', 655, 680, 20, 20)
+                create_stand(eve, 'Smarter Security', '23109', 655, 540, 20, 30)
+                create_stand(eve, 'Cheat 1', '1', 655, 580, 20, 30)
+                create_stand(eve, 'Cheat 2', '1', 655, 620, 20, 20)
+                create_stand(eve, 'Cheat 3', '1', 655, 650, 20, 20)
+                create_stand(eve, 'Cheat 4', '1', 655, 680, 20, 20)
 
 
-#        for x in rx_event.objects.all():
-#                print(x.re_name)
-#                for y in stands.objects.filter(s_rx_event=x):
-#                        print(y.s_name)
-#                        for z in stand_location.objects.filter(sl_stand=y):
-#                                print(z.sl_x, z.sl_y, z.sl_x_length, z.sl_y_length)
+
+def load_transaction_sales_data(rxe):
+        file_path = os.path.join(settings.BASE_DIR, 'data', 'ISC_West_25_data.xlsx')
+        if not os.path.exists(file_path):
+                raise FileNotFoundError(f"File not found: {file_path}")
+
+        data = pd.read_excel(file_path)
+
+    # Iterate through each row and create instances of event_sales_transactions
+        for _, row in data.iterrows():
+                if not isinstance(row['Order Created Date'], NaTType) and row['Recipient Country'] is not None and len(row['Recipient Country']) > 0:
+                        last_modified_date = timezone.make_aware(row['Last Modified Date']) if pd.notnull(row['Last Modified Date']) else None
+                        order_created_date = timezone.make_aware(row['Order Created Date']) if pd.notnull(row['Order Created Date']) else None
+
+                        up, create = event_sales_transactions.objects.update_or_create(
+                                est_event=rxe,
+                                est_Company_Name=row['Company Name'],
+                                est_Recipient_Country=row['Recipient Country'],
+                                est_Customer_Type=row['Customer Type'],
+                                est_Opportunity_Type=row['Opportunity Type'],
+                                est_Opportunity_Owner=row['Opportunity Owner'],
+                                est_Stand_Name_Length_Width=row['Stand Name (Length * Width)'],
+                                est_Stand_Area=row['Stand Area'],
+                                est_Number_of_Corners=row['Number of Corners'],
+                                est_Stand_Zone=row['Stand Zone'],
+                                est_Floor_Plan_Sector=row['Floor Plan Sector'],
+                                est_Sharer_Entitlements=row['Sharer Entitlements'],
+                                est_Last_Modified_Date=last_modified_date,
+                                est_Total_Net_Amount=row['Total Net Amount'],
+                                est_Order_Created_Date=order_created_date,
+                                est_Packages_Sold=row['Packages Sold'],
+                                est_Product_Name=row['Product Name'],)
+
+#        cn = 'AIC Inc.'
+#        cn = 'Aiphone Corporation'
+        if(1==0):
+                for x in event_sales_transactions.objects.filter(est_event=rxe):
+                        print(x.est_event, x.est_Company_Name, x.est_Recipient_Country, x.est_Customer_Type, x.est_Opportunity_Type,
+                                x.est_Opportunity_Owner, x.est_Stand_Name_Length_Width, x.est_Stand_Area, x.est_Number_of_Corners,
+                                x.est_Stand_Zone, x.est_Floor_Plan_Sector, x.est_Sharer_Entitlements, x.est_Sharer_Companies,
+                                x.est_Last_Modified_Date, x.est_Total_Net_Amount, x.est_Order_Created_Date, x.est_Packages_Sold,
+                                x.est_Product_Name, x.est_Stand_Name_Cleaned, x.est_Stand_Name_Dim_Cleaned)
+
+#        for x in event_sales_transactions.objects.filter(est_event=rxe, est_Company_Name=cn):
+        for x in event_sales_transactions.objects.filter(est_event=rxe):
+                snlw = x.est_Stand_Name_Length_Width.split(",")
+                if(len(snlw) > 0):
+                        first = True
+#                        print("snlw: ", x.est_Stand_Name_Length_Width, snlw )
+                        for y in snlw:
+                                first_space_index = y.find(" ")
+                                if first_space_index != -1:
+                                        st_name = y[:first_space_index].strip()
+                                        st_dim = y[first_space_index:].strip()
+#                                        print("y: ", x.est_Stand_Name_Length_Width, y, st_name, st_dim )
+                                        if first:
+                                                x.est_Stand_Name_Cleaned = st_name
+                                                x.est_Stand_Name_Dim_Cleaned = st_dim
+                                                x.save()
+                                                first = False
+                                        else:
+                                                up, create = event_sales_transactions.objects.update_or_create(
+                                                        est_event=x.est_event,
+                                                        est_Company_Name=x.est_Company_Name,
+                                                        est_Recipient_Country=x.est_Recipient_Country,
+                                                        est_Customer_Type=x.est_Customer_Type,
+                                                        est_Opportunity_Type=x.est_Opportunity_Type,
+                                                        est_Opportunity_Owner=x.est_Opportunity_Owner,
+                                                        est_Stand_Name_Length_Width=x.est_Stand_Name_Length_Width,
+                                                        est_Stand_Area=x.est_Stand_Area,
+                                                        est_Number_of_Corners=x.est_Number_of_Corners,
+                                                        est_Stand_Zone=x.est_Stand_Zone,
+                                                        est_Floor_Plan_Sector=x.est_Floor_Plan_Sector,
+                                                        est_Sharer_Entitlements=x.est_Sharer_Entitlements,
+                                                        est_Last_Modified_Date=x.est_Last_Modified_Date,
+                                                        est_Total_Net_Amount=0,
+                                                        est_Order_Created_Date=x.est_Order_Created_Date,
+                                                        est_Packages_Sold=x.est_Packages_Sold,
+                                                        est_Product_Name=x.est_Product_Name,
+                                                        est_Stand_Name_Cleaned=st_name,
+                                                        est_Stand_Name_Dim_Cleaned=st_dim)
+
+        if(1==0):
+#                cn = 'Milestone Systems'
+#                for x in event_sales_transactions.objects.filter(est_event=rxe, est_Company_Name=cn):
+                for x in event_sales_transactions.objects.filter(est_event=rxe):
+                        print(x.est_event, x.est_Company_Name, x.est_Recipient_Country, x.est_Customer_Type, x.est_Opportunity_Type,
+                                x.est_Opportunity_Owner, x.est_Stand_Name_Length_Width, x.est_Stand_Area, x.est_Number_of_Corners,
+                                x.est_Stand_Zone, x.est_Floor_Plan_Sector, x.est_Sharer_Entitlements, x.est_Sharer_Companies,
+                                x.est_Last_Modified_Date, x.est_Total_Net_Amount, x.est_Order_Created_Date, x.est_Packages_Sold,
+                                x.est_Product_Name, x.est_Stand_Name_Cleaned, x.est_Stand_Name_Dim_Cleaned)
+
+
 
 
 
@@ -168,10 +258,13 @@ def run(*args):
 #        f.write("database_host_name: " + db_host_name + "\n")
 #        f.write("database_name: " + db_name + "\n")
 
-        record_log_data("aaa_reset_and_load.py", "reset data", "reset data")
+#        record_log_data("aaa_reset_and_load.py", "reset data", "reset data")
         reset_test_data()
-        record_log_data("aaa_reset_and_load.py", "load data", "load data")
+#        record_log_data("aaa_reset_and_load.py", "load data", "load data")
         populate_for_test()
+
+        rxe = rx_event.objects.get(re_name='ISC West 2025')
+        load_transaction_sales_data(rxe)
 
 #        f.write("Complete: " + logs_filename + str(timezone.now()) + "\n")
 #        f.close()
