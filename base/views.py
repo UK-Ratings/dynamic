@@ -21,6 +21,7 @@ from users.models import *
 
 from scripts.aaa_helper_functions import * 
 from scripts.aaa_reset_and_load import *
+from scripts import aaa_run_process
 
 
 def base_home(request):
@@ -63,7 +64,7 @@ def base_venue(request):
 
 #    reset_test_data()
 #    populate_for_test()
-    run_event_year()
+    aaa_run_process.run()
     pyplot_filename = None
     if os.environ.get("RX_STATIC_FLOORPLAN_LOCATION") is not None:
             static_floorplan_loc = str(os.environ.get("RX_STATIC_FLOORPLAN_LOCATION"))

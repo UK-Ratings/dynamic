@@ -13,26 +13,28 @@ from pandas._libs.tslibs.nattype import NaTType
 from base.models import *
 from scripts.aaa_helper_functions import *
 
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
 def get_next_stand_id():
     max_id = stands.objects.aggregate(max_id=Max('s_id'))['max_id']
     return (max_id or 0) + 1
-
 def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
-
         st, created = stands.objects.update_or_create(s_id=get_next_stand_id(), defaults={
                 's_rx_event': eve[0], 's_name': stand_name, 's_number': stand_number,
-                's_stand_fill_color':'#99B3CF', 's_stand_outline_color':'black', 's_text_color':'#000000'})
+                's_stand_fill_color':get_color('unsold stand fill color'), 's_stand_outline_color':get_color('unsold stand outline color'), 's_text_color':get_color('unsold stand text color')})
+
+#                's_stand_fill_color':'#99B3CF', 's_stand_outline_color':'black', 's_text_color':'#000000'})
         sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
                                 'sl_x':x, 'sl_y':y, 'sl_x_length':x_length, 'sl_y_length':y_length})
-
 def populate_for_test():
 #        f.write("populate_for_test: " + str(timezone.now()) + "\n")
 #        record_log_data("aaa_load_test_data.py", "populate_for_test", "populate_for_test")
 
         eve = rx_event.objects.update_or_create(re_name='ISC West 2025', defaults={
-                're_floor_length': 1080, 're_floor_height': 720})
+                're_floor_length': 1080, 're_floor_height': 720,
+                're_event_start_date': timezone.datetime(2025, 3, 31, 0, 0, 0),
+                're_event_end_date': timezone.datetime(2025, 4, 4, 0, 0, 0)})
 
         if(1==1):  #row 7
                 row_amt = 300
@@ -142,9 +144,6 @@ def populate_for_test():
                 create_stand(eve, 'Cheat 2', '1', 655, 620, 20, 20)
                 create_stand(eve, 'Cheat 3', '1', 655, 650, 20, 20)
                 create_stand(eve, 'Cheat 4', '1', 655, 680, 20, 20)
-
-
-
 def load_transaction_sales_data(rxe):
         file_path = os.path.join(settings.BASE_DIR, 'data', 'ISC_West_25_data.xlsx')
         if not os.path.exists(file_path):
@@ -258,9 +257,9 @@ def run(*args):
 #        f.write("database_host_name: " + db_host_name + "\n")
 #        f.write("database_name: " + db_name + "\n")
 
-#        record_log_data("aaa_reset_and_load.py", "reset data", "reset data")
+        record_log_data("aaa_reset_and_load.py", "reset data", "reset data")
         reset_test_data()
-#        record_log_data("aaa_reset_and_load.py", "load data", "load data")
+        record_log_data("aaa_reset_and_load.py", "load data", "load data")
         populate_for_test()
 
         rxe = rx_event.objects.get(re_name='ISC West 2025')

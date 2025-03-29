@@ -19,9 +19,6 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as patches
 
-from scripts import aaa_reset_and_load
-
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
 def record_page_data(python_app, function_name, request):
@@ -141,7 +138,6 @@ def erase_files_in_dir(media_directory):
                 os.unlink(file_path)
         except Exception as e:
             print(e)
-
 def write_pyplot_to_file(plt, media_directory, cdatetime):
     dumps_dir = os.path.join(settings.BASE_DIR, 'static/'+media_directory)
     os.makedirs(dumps_dir, exist_ok=True)
@@ -180,6 +176,59 @@ def create_mov_from_images(media_directory, output_filename):
 
     video.release()
     print(f"Video saved as {movie_filename}")
+
+
+#--gbr-red : #e31f26;
+#--gbr-dark-red : #aa1b1f;
+#--gbr-light-red : #F7ADAD;
+#--gbr-cor-red : #C10016;
+
+#--gbr-green : #198754;
+#--gbr-light-green: #A1FB8E;
+
+#--gbr-middle-gray : #939393;
+#--gbr-cor-middle-gray : #808080;
+#--gbr-dark-gray : #212121;
+#--gbr-site-background : #ebebeb;
+#--gbr-light-gray : #f0f0f0;
+
+#--bs-blue : #0d6efd;
+#--bs-indigo : #6610f2;
+#--bs-purple : #6f42c1;
+#--bs-pink : #d63384;
+#--bs-red : #dc3545;
+#--bs-orange : #fd7e14;
+#--bs-yellow : #ffc107;
+#--bs-green : #198754;
+#--bs-teal : #20c997;
+#--bs-cyan : #0dcaf0;
+
+
+def get_color(color_type):
+        #blue for unsold
+        if(color_type =='unsold stand outline color'):
+                return '#002F6C'
+        if(color_type =='unsold stand fill color'):
+                return '#41B6E6'
+        if(color_type =='unsold stand text color'):
+                return '#282761'
+        if(color_type =='sold stand outline color'):
+                return '#6610f2'
+        if(color_type =='sold stand fill color'):
+                return '#8745f2'
+        if(color_type =='sold stand text color'):
+                return '#ffffff'
+
+        if(color_type =='main aisle'):
+                return '#808080'
+
+
+#default to black
+        return '#000000'
+
+
+
+
 def print_ax_size(fig, gs, ax, from_def):
         print(f"{from_def}... ")
         print(f"   fig: length {fig.get_size_inches()[0]} inches, height {fig.get_size_inches()[1]} inches")
@@ -419,7 +468,7 @@ def create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, 
 
 
 def floorplan_new_place_isles(ax, image_multiplier, fl_div):
-        isle_color = '#D8D8D8'
+        isle_color = get_color('main aisle')
         ax = new_place_rectangle(ax, 10, 310, 1030, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0)
         ax = new_place_rectangle(ax, 10, 260, 400, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0)
         return ax
@@ -495,51 +544,5 @@ def render_floorplan(rxe, header_set, footer_set, message_set):
         record_log_data("aaa_helper_functions.py", "run_event_year", "completed: event name: " + str(rxe.re_name))
         return pyplot_filename
 
-
-
-def run_event_year():
-        record_log_data("aaa_helper_functions.py", "run_event_year", "starting...")
-
-        aaa_reset_and_load.run()
-
-        rxe = rx_event.objects.get(re_name='ISC West 2025')
-        print(rxe.re_name, rxe)
-        print(event_sales_transactions.objects.filter(est_event=rxe).order_by('est_Order_Created_Date').count())
-#when running entire, this will need to go into calling function.
-        image_length, image_height, image_margin, header_space, footer_space, image_multiplier, static_floorplan_loc, static_analysis_loc = get_env_values()
-        erase_files_in_dir(static_floorplan_loc)
-
-#def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):##
-
-#        st, created = stands.objects.update_or_create(s_id=get_next_stand_id(), defaults={
-#                's_rx_event': eve[0], 's_name': stand_name, 's_number': stand_number,
-#                's_stand_fill_color':'#99B3CF', 's_stand_outline_color':'black', 's_text_color':'#000000'})
-#        sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
-#                                'sl_x':x, 'sl_y':y, 'sl_x_length':x_length, 'sl_y_length':y_length})
-
-        for x in event_sales_transactions.objects.filter(est_event=rxe).order_by('est_Order_Created_Date'):
-                found_stand = False
-                for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
-                        print(x.est_Order_Created_Date,fs.s_number, fs.s_name, fs.s_rx_event.re_name)
-                        fs.s_stand_fill_color = '#e31f26'
-                        fs.s_stand_outline_color = '#aa1b1f'
-                        fs.save()
-                        found_stand = True
-                if found_stand == True:        
-                        header_set = []
-                        footer_set = []
-                        message_set = []
-                        header_set.append("ISC West 2025")
-                        header_set.append("Las Vegas, NV")
-                        header_set.append(str(x.est_Order_Created_Date))
-
-                #eventually add to render call
-                        footer_set.append("ISC West 2025")
-                        footer_set.append("Las Vegas, NV")
-                        footer_set.append("Blah, Blah, Blah")
-                        render_floorplan(rxe, header_set, footer_set, message_set)
-
-#    create_mov_from_images('images', 'output.mp4')
-        record_log_data("aaa_helper_functions.py", "run_event_year", "completed...")
 
 

@@ -48,6 +48,15 @@ class rx_event(models.Model):
     re_name = models.CharField("RX Event Name", max_length=300)
     re_floor_length = models.IntegerField("RX Event Floor Length", blank=True, null=True)
     re_floor_height = models.IntegerField("RX Event Floor Height", blank=True, null=True)
+    re_event_start_date = models.DateTimeField("RX Event Start Date", blank=True, null=True)
+    re_event_end_date = models.DateTimeField("RX Event End Date", blank=True, null=True)
+
+
+
+
+
+
+
 
 class event_sales_transactions(models.Model):
     est_event = models.ForeignKey(rx_event, blank=True, null=True, on_delete=models.CASCADE)
@@ -70,10 +79,6 @@ class event_sales_transactions(models.Model):
     est_Order_Created_Date = models.DateTimeField("Order Created Date", blank=True, null=True)
     est_Packages_Sold = models.CharField("Packages Sold", max_length=300, blank=True, null=True, )
     est_Product_Name = models.CharField("Product Name", max_length=300, blank=True, null=True, )
-
-
-
-
 
 class stands(models.Model):
     s_id = models.IntegerField(null=True, blank=True)
