@@ -129,7 +129,7 @@ def get_env_values():
 def erase_files_in_dir(media_directory):
 
     dumps_dir = os.path.join(settings.BASE_DIR, 'static/'+media_directory)
-    print("dumps_dir: ", dumps_dir)
+#    print("dumps_dir: ", dumps_dir)
     os.makedirs(dumps_dir, exist_ok=True)
     for file in os.listdir(dumps_dir):
         file_path = os.path.join(dumps_dir, file)
@@ -219,10 +219,29 @@ def get_color(color_type):
         if(color_type =='sold stand text color'):
                 return '#ffffff'
 
+        if(color_type =='price increase stand outline color'):
+                return '#198754'
+        if(color_type =='price increase stand fill color'):
+                return '#A1FB8E'
+        if(color_type =='price increase stand text color'):
+                return '#000000'
+
+        if(color_type =='price decrease stand outline color'):
+                return '#aa1b1f'
+        if(color_type =='price decrease stand fill color'):
+                return '#e31f26'
+        if(color_type =='price decrease stand text color'):
+                return '#ffffff'
+
+        if(color_type =='sold stand circle outline color'):
+                return '#aa1b1f'
+        if(color_type =='sold stand circle fill color'):
+                return 'none'
+        if(color_type =='sold stand circle text color'):
+                return '#ffffff'
+
         if(color_type =='main aisle'):
                 return '#808080'
-
-
 #default to black
         return '#000000'
 
@@ -258,7 +277,20 @@ def figure_small_font_size(first_line_font_size):
                 sm_font = 40
                 line_height = 85
         return sm_font, line_height
-def new_place_rectangle(sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width):
+
+def new_place_circle(sq, x, y, xlen, ylen, fill_color, edge_color, fl_div, line_width):
+    radius = (xlen) * fl_div  # Adjust as needed for your use case
+    xcir = x + xlen/2
+    if(ylen > 0):
+            ycir = y + xlen/2
+    else:
+            ycir = y - xlen/2
+    # Create the circle
+    circle = patches.Circle(((xcir) * fl_div, (ycir) * fl_div), radius, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
+    sq.add_patch(circle)
+
+    return sq
+def zzznew_place_rectangle(sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width):
 #Note: Could get more sophisticated with the text placement and size.
         rect = patches.Rectangle((x*fl_div, y*fl_div), xlen*fl_div, ylen*fl_div, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
         sq.add_patch(rect)
@@ -333,6 +365,96 @@ def new_place_rectangle(sq, x, y, xlen, ylen, image_multiplier, fill_color, edge
                                         ypos -= (line_height)  # Adjust vertical position for the next line
         return sq
 
+def calculate_max_font_size(fig, sq, text, available_width, available_height, fl_div):
+    """
+    Calculate the maximum font size so that the text fits within the available width and height.
+    """
+    max_font_size=100
+    renderer = fig.canvas.get_renderer()
+
+    for font_size in range(max_font_size, 0, -1):  # Start from max_font_size and decrease
+        text_obj = sq.text(500, 500, text, fontsize=font_size, ha='center', va='center', visible=True)
+#        renderer = fig.canvas.get_renderer()
+        bbox = text_obj.get_window_extent(renderer=renderer)
+        text_width = bbox.width
+        text_height = bbox.height
+        text_obj.remove()  # Remove the temporary text object
+#        print(f"text_obj: {text_obj} font_size: {font_size}, text_width: {text_width}, text_height: {text_height}, available_width: {available_width}, available_height: {available_height}")
+
+        if text_width <= available_width and text_height <= available_height:
+            return font_size  # Return the font size that fits
+
+    return 1  # Return a minimum font size if no size fits
+
+
+def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width):
+#Note: Could get more sophisticated with the text placement and size.
+        rect = patches.Rectangle((x*fl_div, y*fl_div), xlen*fl_div, ylen*fl_div, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
+        sq.add_patch(rect)
+        if sq_text is not None:
+                title_str = sq_text[0]
+                info_set = sq_text[1:]
+                top_section = ylen*.4
+                bottom_section = ylen*.6
+                padding = 1  # Add some padding around the text
+
+                available_width = abs((xlen * fl_div) - (2 * (padding*fl_div)))
+                available_height = abs((top_section * fl_div) - (2 * (padding*fl_div)))
+                # Determine the maximum font size for the first line
+                title_font_size = calculate_max_font_size(fig, sq, title_str, available_width, available_height, fl_div)
+                # Add the first line of text (centered and larger)
+                if(ylen > 0):
+                        sq.text(
+                        x * fl_div + xlen * fl_div / 2,  # Center horizontally
+                        ((y * fl_div) + (ylen * fl_div) - (padding*fl_div)),  # Position at the top with padding
+                        sq_text[0],
+                        color=sq_text_color,
+                        ha='center',
+                        va='top',
+                        fontsize=int(title_font_size)
+                        )
+                else:
+                        sq.text(
+                        x * fl_div + xlen * fl_div / 2,  # Center horizontally
+                        ((y * fl_div) - (padding*fl_div)),  # Position at the top with padding
+                        sq_text[0],
+                        color=sq_text_color,
+                        ha='center',
+                        va='top',
+                        fontsize=int(title_font_size)
+                        )
+
+                if(len(info_set) > 0):
+                        bottom_font_size = 100
+                        available_height = abs((bottom_section * fl_div))
+                        line_height = abs((available_height - ((padding*fl_div)*2))) / len(info_set)
+                        if(ylen > 0):
+                                ypos = ((y+ylen)*fl_div) - int(available_height)
+                        else:
+                                ypos = (y*fl_div) - int(available_height)
+
+                        for qq in info_set:
+                                bfs = calculate_max_font_size(fig, sq, qq, available_width, line_height, fl_div)
+                                if(bfs < bottom_font_size):
+                                        bottom_font_size = bfs
+                        for qq in info_set:
+                                sq.text(
+                                        (x+1)*fl_div,  # Center horizontally
+                                        ypos,
+                                        qq,
+                                        color=sq_text_color,
+                                        ha='left',
+                                        va='top',
+                                        fontsize=int(bottom_font_size))
+
+                                if(ylen > 0):
+                                        ypos -= (line_height)  # Adjust vertical position for the next line#
+                                else:
+                                        ypos += (line_height)  # Adjust vertical position for the next line#
+
+        return sq
+
+
 def create_outer_square(fig, gs, plt_length, plt_height, image_multiplier):
         ax = fig.add_subplot(gs[:, :])  # Use the entire grid for the main plot
 #        print_ax_size(fig, gs, ax, "create_outer_square")
@@ -343,7 +465,7 @@ def create_outer_square(fig, gs, plt_length, plt_height, image_multiplier):
         ax.axis('off')
         # Add a rectangle around the entire plot
         test_text = None
-        ax = new_place_rectangle(ax, 0, 0, plt_length*image_multiplier, plt_height*image_multiplier, image_multiplier, '#ffffff', '#ffffff', None, '#000000', 1, 3)
+        ax = new_place_rectangle(fig, ax, 0, 0, plt_length*image_multiplier, plt_height*image_multiplier, image_multiplier, '#ffffff', '#ffffff', None, '#000000', 1, 3)
         return(fig)
 def new_place_header(fig, gs, image_margin, header_space, image_length, image_multiplier, header_set):
         ax_upper_x = image_margin * image_multiplier
@@ -358,7 +480,7 @@ def new_place_header(fig, gs, image_margin, header_space, image_length, image_mu
         ax.set_ylim(0, ax_height)
         ax.axis('off')
         test_text = None
-        ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
+        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
                          image_multiplier, '#ffffff', '#ffffff', None, '#000000', 1, 2)
         top_pos_x = (ax_width / 2)  # Center horizontally
         top_pos_y = ((ax_height-(4*image_multiplier)))  # Adjust vertical position
@@ -382,7 +504,7 @@ def new_place_footer(fig, gs, image_margin, footer_space, image_length, image_he
         ax.set_ylim(0, ax_height)
         ax.axis('off')
         test_text = None
-        ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
+        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
                          image_multiplier, '#ffffff', '#ffffff', None, '#000000', 1, 2)
         top_pos_x = 1*image_multiplier  # Center horizontally
         top_pos_y = ((ax_height-(10*image_multiplier)))  # Adjust vertical position
@@ -467,14 +589,42 @@ def create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, 
         return(fig)
 
 
-def floorplan_new_place_isles(ax, image_multiplier, fl_div):
+def floorplan_new_place_isles(fig, ax, image_multiplier, fl_div):
         isle_color = get_color('main aisle')
-        ax = new_place_rectangle(ax, 10, 310, 1030, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0)
-        ax = new_place_rectangle(ax, 10, 260, 400, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0)
+        ax = new_place_rectangle(fig, ax, 10, 310, 1030, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0)
+        ax = new_place_rectangle(fig, ax, 10, 260, 400, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0)
         return ax
-def floorplan_new_place_stands(ax, image_multiplier, fl_div):
+def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div):
         for x in stand_location.objects.filter(sl_stand__s_rx_event__re_name__iexact='ISC West 2025'):
-                ax = new_place_rectangle(ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, x.sl_stand.s_stand_fill_color, x.sl_stand.s_stand_outline_color, [x.sl_stand.s_name,'Price:$14000', 'Target:$20000'], x.sl_stand.s_text_color, fl_div, 1)
+                #Available, Sold, New Sell, Reserved, New Stand
+                if(x.sl_stand.s_stand_status == 'Available'):
+                        stand_fill_color = get_color('unsold stand fill color')
+                        stand_outline_color = get_color('unsold stand outline color')
+                        text_color = get_color('unsold stand text color')
+                if(x.sl_stand.s_stand_status == 'Sold'):
+                        stand_fill_color = get_color('sold stand fill color')
+                        stand_outline_color = get_color('sold stand outline color')
+                        text_color = get_color('sold stand text color')
+                if(x.sl_stand.s_stand_status == 'New Sell'):
+                        stand_fill_color = get_color('sold stand fill color')
+                        stand_outline_color = get_color('sold stand outline color')
+                        text_color = get_color('sold stand text color')
+                        circle_fill_color = get_color('sold stand circle fill color')
+                        circle_outline_color = get_color('sold stand circle outline color')
+                        text_color = get_color('sold stand circle text color')
+                        ax = new_place_circle(ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, circle_fill_color, circle_outline_color, fl_div, 40)
+
+                #Base, Price Increase, Price Decrease 
+                if(x.sl_stand.s_stand_price == 'Price Increase'):
+                        stand_fill_color = get_color('price increase stand fill color')
+                        stand_outline_color = get_color('price increase stand outline color')
+                        text_color = get_color('price increase stand text color')
+                if(x.sl_stand.s_stand_price == 'Price Decrease'):
+                        stand_fill_color = get_color('price decrease stand fill color')
+                        stand_outline_color = get_color('price decrease stand outline color')
+                        text_color = get_color('price decrease stand text color')
+
+                ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, [x.sl_stand.s_name,'Price:$14000', 'Target:$20000'], text_color, fl_div, 1)
         return ax
 
 
@@ -504,11 +654,11 @@ def floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_l
         ax.set_ylim(0, ax_height)
         ax.axis('off')
         test_text = None
-        ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
+        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
                          image_multiplier, '#ffffff', '#000000', None, '#000000', 1, 3)
 
-        ax = floorplan_new_place_isles(ax, image_multiplier, fl_div)
-        ax = floorplan_new_place_stands(ax, image_multiplier, fl_div)
+        ax = floorplan_new_place_isles(fig, ax, image_multiplier, fl_div)
+        ax = floorplan_new_place_stands(fig, ax, image_multiplier, fl_div)
         return(fig)
 
 
@@ -525,6 +675,9 @@ def render_floorplan(rxe, header_set, footer_set, message_set):
         plt_length = int((image_length*image_multiplier)/100.0)
         plt_height = int((image_height*image_multiplier)/100.0)
 
+#        iw, ih = get_text_dimensions_temp("Hello World", 50)
+#        iw, ih = get_text_dimensions_temp("Hello World", 500)
+
         fig = plt.figure(figsize=(plt_length, plt_height))    #x, y
         gs = gridspec.GridSpec(plt_height*100, plt_length*100, figure = fig)  # rows, columns
 #        print_ax_size(fig, gs, None, "render_floorplan...")
@@ -534,6 +687,8 @@ def render_floorplan(rxe, header_set, footer_set, message_set):
         fig = new_place_header(fig, gs, image_margin, header_space, image_length, image_multiplier, header_set)
         fig = new_place_footer(fig, gs, image_margin, footer_space, image_length, image_height, image_multiplier, footer_set)
         fig = floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floor_length, floor_height)
+
+
 #        fig = create_analysis1_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 3, analysis_set_1)
 #        fig = create_analysis2_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 3, 1, analysis_set_1)
 #        fig = create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 4, 1, analysis_set_1)

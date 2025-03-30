@@ -22,7 +22,8 @@ def get_next_stand_id():
 def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
         st, created = stands.objects.update_or_create(s_id=get_next_stand_id(), defaults={
                 's_rx_event': eve[0], 's_name': stand_name, 's_number': stand_number,
-                's_stand_fill_color':get_color('unsold stand fill color'), 's_stand_outline_color':get_color('unsold stand outline color'), 's_text_color':get_color('unsold stand text color')})
+#                's_stand_fill_color':'#000000', 's_stand_outline_color':'#000000', 's_text_color':'000000',
+                's_stand_status':'Available', 's_stand_price':'Base'})
 
 #                's_stand_fill_color':'#99B3CF', 's_stand_outline_color':'black', 's_text_color':'#000000'})
         sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
