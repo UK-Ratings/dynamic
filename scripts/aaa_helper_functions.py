@@ -309,71 +309,7 @@ def new_place_circle(sq, x, y, xlen, ylen, fill_color, edge_color, fl_div, line_
 
     return sq
 
-def zzznew_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width):
-        rect = patches.Rectangle((x*fl_div, y*fl_div), xlen*fl_div, ylen*fl_div, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
-        sq.add_patch(rect)
-        if sq_text is not None:
-                title_str = sq_text[0]
-                info_set = sq_text[1:]
-                top_section = ylen*.4
-                bottom_section = ylen*.6
-                padding = 1  # Add some padding around the text
-
-                available_width = abs(xlen - (xlen*.25)) * fl_div #int(abs((xlen * fl_div) - ((xlen/5) * (padding*fl_div))))
-                available_height = abs(top_section - (top_section * .25)) * fl_div
-                title_font_size, text_width, text_height = calculate_max_font_size(fig, sq, title_str, available_width, available_height, fl_div, 300)
-                if(ylen > 0):
-                        sq.text(
-                        x * fl_div + xlen * fl_div / 2,  # Center horizontally
-                        ((y * fl_div) + (ylen * fl_div) - (padding*fl_div)),  # Position at the top with padding
-                        sq_text[0],
-                        color=sq_text_color,
-                        ha='center',
-                        va='top',
-                        fontsize=int(title_font_size)
-                        )
-                else:
-                        sq.text(
-                        x * fl_div + xlen * fl_div / 2,  # Center horizontally
-                        ((y * fl_div) - (padding*fl_div)),  # Position at the top with padding
-                        sq_text[0],
-                        color=sq_text_color,
-                        ha='center',
-                        va='top',
-                        fontsize=int(title_font_size)
-                        )
-
-                if(len(info_set) > 0):
-#                if(1==0):
-                        available_height = abs(bottom_section - (bottom_section * .25)) * fl_div
-                        line_height = abs((available_height)) / len(info_set)
-                        bottom_font_size = 200
-                        bottom_text_height = 100000
-                        for qq in info_set:
-                                bfs, text_width, text_height = calculate_max_font_size(fig, sq, qq, available_width, line_height, fl_div, bottom_font_size)
-                                if(bfs <= bottom_font_size):
-                                        bottom_font_size = bfs
-                                        bottom_text_height = text_height + text_height*.15
-                        if(ylen > 0):
-                                ypos = ((y)*fl_div) + bottom_text_height 
-                        else:
-                                ypos = ((y+ylen)*fl_div) + bottom_text_height
-                        for qq in reversed(info_set):
-                                sq.text(
-                                        (x+1)*fl_div,  # Center horizontally
-                                        ypos,
-                                        qq,
-                                        color=sq_text_color,
-                                        ha='left',
-                                        va='top',
-                                        fontsize=int(bottom_font_size))
-
-                                ypos += (bottom_text_height)  # Adjust vertical position for the next line#
-
-        return sq
-
-
-def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width):
+def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width, max_text_size):
         rect = patches.Rectangle((x*fl_div, y*fl_div), xlen*fl_div, ylen*fl_div, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
         sq.add_patch(rect)
         if sq_text is not None:
@@ -385,47 +321,47 @@ def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color,
 
                 available_width = abs(xlen - (xlen*.25)) * fl_div #int(abs((xlen * fl_div) - ((xlen/5) * (padding*fl_div))))
                 available_height = abs(top_section - (top_section * .25)) * fl_div
-                title_font_size, text_width, text_height = calculate_max_font_size(fig, sq, title_str, available_width, available_height, fl_div, 300)
+                title_font_size, text_width, text_height = calculate_max_font_size(fig, sq, title_str, available_width, available_height, fl_div, max_text_size)
                 top_line = sq_text[0]
-                if(ylen > 0):
-                        sq.text(
-                        x * fl_div + xlen * fl_div / 2,  # Center horizontally
-                        ((y * fl_div) + (ylen * fl_div) - (padding*fl_div)),  # Position at the top with padding
-                        top_line[0],
-                        color=sq_text_color,
-                        ha=top_line[1],
-                        va=top_line[2],
-                        fontsize=int(title_font_size)
-                        )
+                if(top_line[1] == 'center'):
+                        xxpos = x * fl_div + xlen * fl_div / 2  # Center horizontally
                 else:
-                        sq.text(
-                        x * fl_div + xlen * fl_div / 2,  # Center horizontally
-                        ((y * fl_div) - (padding*fl_div)),  # Position at the top with padding
+                        xxpos = (x+1)*fl_div
+                if(ylen > 0):
+                        yypos = ((y * fl_div) + (ylen * fl_div) - (padding*fl_div))  # Position at the top with padding
+                else:
+                        yypos = ((y * fl_div) - (padding*fl_div))  # Position at the top with padding
+                sq.text(
+                        xxpos,  
+                        yypos,
                         top_line[0],
                         color=sq_text_color,
                         ha=top_line[1],
                         va=top_line[2],
                         fontsize=int(title_font_size)
                         )
-
                 if(len(info_set) > 0):
 #                if(1==0):
                         available_height = abs(bottom_section - (bottom_section * .25)) * fl_div
                         line_height = abs((available_height)) / len(info_set)
-                        bottom_font_size = 200
+                        bottom_font_size = max_text_size
                         bottom_text_height = 100000
                         for qq in info_set:
-                                bfs, text_width, text_height = calculate_max_font_size(fig, sq, qq, available_width, line_height, fl_div, bottom_font_size)
+                                bfs, text_width, text_height = calculate_max_font_size(fig, sq, qq[0], available_width, line_height, fl_div, bottom_font_size)
                                 if(bfs <= bottom_font_size):
                                         bottom_font_size = bfs
                                         bottom_text_height = text_height + text_height*.15
+                        if(qq[1] == 'center'):
+                                xxpos = x * fl_div + xlen * fl_div / 2  # Center horizontally
+                        else:
+                                xxpos = (x+1)*fl_div
                         if(ylen > 0):
                                 ypos = ((y)*fl_div) + bottom_text_height 
                         else:
                                 ypos = ((y+ylen)*fl_div) + bottom_text_height
                         for qq in reversed(info_set):
                                 sq.text(
-                                        (x+1)*fl_div,  # Center horizontally
+                                        xxpos,  # Center horizontally
                                         ypos,
                                         qq[0],
                                         color=sq_text_color,
@@ -445,7 +381,7 @@ def create_outer_square(fig, gs, plt_length, plt_height, image_multiplier):
         ax.axis('off')
         # Add a rectangle around the entire plot
         test_text = None
-        ax = new_place_rectangle(fig, ax, 0, 0, plt_length*image_multiplier, plt_height*image_multiplier, image_multiplier, '#ffffff', '#ffffff', None, '#000000', 1, 3)
+        ax = new_place_rectangle(fig, ax, 0, 0, plt_length*image_multiplier, plt_height*image_multiplier, image_multiplier, '#ffffff', '#ffffff', None, '#000000', 1, 3, 100)
         return(fig)
 
 def create_analysis1_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, analysis_sections, analysis_section_height, analysis_set):
@@ -463,7 +399,7 @@ def create_analysis1_subplot(fig, gs, image_margin, header_space, footer_space, 
         ax.axis('off')
         test_text = None
         ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#ffffff', test_text, '#000000', 1, 2)
+                         image_multiplier, '#ffffff', '#ffffff', test_text, '#000000', 1, 2, 100)
         top_pos_x = 1*image_multiplier  # Center horizontally
         top_pos_y = ((ax_height-(1*image_multiplier)))  # Adjust vertical position
         ft_size = 18
@@ -487,7 +423,7 @@ def create_analysis2_subplot(fig, gs, image_margin, header_space, footer_space, 
         ax.axis('off')
         test_text = None
         ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#ffffff', test_text, '#000000', 1, 2)
+                         image_multiplier, '#ffffff', '#ffffff', test_text, '#000000', 1, 2, 100)
         top_pos_x = 1*image_multiplier  # Center horizontally
         top_pos_y = ((ax_height-(1*image_multiplier)))  # Adjust vertical position
         ft_size = 18
@@ -511,7 +447,7 @@ def create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, 
         ax.axis('off')
         test_text = None
         ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#ffffff', test_text, '#000000', 1, 2)
+                         image_multiplier, '#ffffff', '#ffffff', test_text, '#000000', 1, 2, 100)
         top_pos_x = 1*image_multiplier  # Center horizontally
         top_pos_y = ((ax_height-(1*image_multiplier)))  # Adjust vertical position
         ft_size = 18
@@ -523,8 +459,8 @@ def create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, 
 
 def floorplan_new_place_isles(fig, ax, image_multiplier, fl_div):
         isle_color = get_color('main aisle')
-        ax = new_place_rectangle(fig, ax, 10, 310, 1030, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0)
-        ax = new_place_rectangle(fig, ax, 10, 260, 400, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0)
+        ax = new_place_rectangle(fig, ax, 10, 310, 1030, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0, 50)
+        ax = new_place_rectangle(fig, ax, 10, 260, 400, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0, 50)
         return ax
 def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div):
         for x in stand_location.objects.filter(sl_stand__s_rx_event__re_name__iexact='ISC West 2025'):
@@ -561,7 +497,7 @@ def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div):
                 new_stand.append(['Price: $20000', 'left', 'top'])
                 new_stand.append(['Target: $30000', 'left', 'top'])
 
-                ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1)
+                ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50)
         return ax
 
 def new_place_header(fig, gs, image_margin, header_space, image_length, image_height, image_multiplier, header_set, footer_space):
@@ -579,7 +515,7 @@ def new_place_header(fig, gs, image_margin, header_space, image_length, image_he
         ax.axis('off')
         test_text = None
         ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#000000', header_set, '#000000', 1, 3)
+                         image_multiplier, '#ffffff', '#ffffff', header_set, '#000000', 1, 3, 300)
         return(fig)
 def new_place_footer(fig, gs, image_margin, footer_space, image_length, image_height, image_multiplier, footer_set):
         ax_height = int(footer_space * image_multiplier) 
@@ -596,7 +532,7 @@ def new_place_footer(fig, gs, image_margin, footer_space, image_length, image_he
         ax.axis('off')
         test_text = None
         ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#000000', footer_set, '#000000', 1, 3)
+                         image_multiplier, '#ffffff', '#ffffff', footer_set, '#000000', 1, 3, 300)
         return(fig)
 
 def floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floorplan_length, floorplan_height):
@@ -621,7 +557,7 @@ def floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_l
         ax.axis('off')
         test_text = None
         ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#000000', None, '#000000', 1, 3)
+                         image_multiplier, '#ffffff', '#000000', None, '#000000', 1, 3, 100)
 
         ax = floorplan_new_place_isles(fig, ax, image_multiplier, fl_div)
         ax = floorplan_new_place_stands(fig, ax, image_multiplier, fl_div)

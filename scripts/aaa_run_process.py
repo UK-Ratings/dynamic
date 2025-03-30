@@ -112,14 +112,14 @@ def run_event_year(event_name, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
 
-#        while ev_date <= end_date:
-        if (1 == 0):
+        while ev_date <= end_date:
+#        if (1 == 0):
                 if(ev_date == st_date):
                         if(create_images == True):
                                 footer_set = []
                                 message_set = []
-                                footer_set.append("INITAL VIEW")
-                                footer_set.append(build_stand_counts_as_string(rxe, ev_date))
+                                footer_set.append(["INITAL VIEW", 'center', 'top'])
+                                footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
                                 render_floorplan(rxe, header_set, footer_set, message_set)
                 else:
                         for x in event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)):
@@ -132,9 +132,9 @@ def run_event_year(event_name, create_images):
                                         if(create_images == True):
                                                 footer_set = []
                                                 message_set = []
-                                                footer_set.append("EVENT: Stand Sale: " + str(x.est_Company_Name) + " at: "+str(x.est_Stand_Name_Cleaned) + " on: "+str(ev_date))
-                                                footer_set.append("Las Vegas, NV")
-                                                footer_set.append(build_stand_counts_as_string(rxe, ev_date))
+                                                footer_set.append(["EVENT: Stand Sale: " + str(x.est_Company_Name) + " at: "+str(x.est_Stand_Name_Cleaned) + " on: "+str(ev_date), 'center', 'top'])
+                                                footer_set.append(["Las Vegas, NV", 'left', 'top'])
+                                                footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
                                                 render_floorplan(rxe, header_set, footer_set, message_set)
                                         fs.s_stand_status = 'Sold'
                                         fs.save()
@@ -143,7 +143,7 @@ def run_event_year(event_name, create_images):
         if(create_images == True):
                 footer_set = []
                 message_set = []
-                footer_set.append(["FINAL VIEW", 'left', 'top'])
+                footer_set.append(["FINAL VIEW", 'center', 'top'])
                 footer_set.append(["blah, blah, blah", 'left', 'top'])
                 footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
                 render_floorplan(rxe, header_set, footer_set, message_set)
