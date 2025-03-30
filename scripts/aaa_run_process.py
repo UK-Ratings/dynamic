@@ -107,9 +107,9 @@ def run_event_year(event_name, create_images):
         erase_files_in_dir(static_floorplan_loc)
 
         header_set = []
-        header_set.append(rxe.re_name)
-        header_set.append("Las Vegas, NV")
-        header_set.append(str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")))
+        header_set.append([rxe.re_name, 'center', 'top'])
+        header_set.append(["Las Vegas, NV", 'center', 'top'])
+        header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
 
 #        while ev_date <= end_date:
@@ -143,8 +143,9 @@ def run_event_year(event_name, create_images):
         if(create_images == True):
                 footer_set = []
                 message_set = []
-                footer_set.append("FINAL VIEW")
-                footer_set.append(build_stand_counts_as_string(rxe, ev_date))
+                footer_set.append(["FINAL VIEW", 'left', 'top'])
+                footer_set.append(["blah, blah, blah", 'left', 'top'])
+                footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
                 render_floorplan(rxe, header_set, footer_set, message_set)
 
         record_log_data("aaa_helper_functions.py", "run_event_year", "completed...")
