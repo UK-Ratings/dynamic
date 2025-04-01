@@ -12,7 +12,7 @@ from django.contrib import messages
 from django.utils.translation import get_language
 from dotenv import load_dotenv
 from math import sqrt
-
+import random
 from base.models import *
 from users.models import *
 
@@ -288,15 +288,21 @@ def get_color(color_type):
         if(color_type =='unsold stand outline color'):
                 return '#002F6C'
         if(color_type =='unsold stand fill color'):
-                return '#41B6E6'
+                return '#ffffff'
         if(color_type =='unsold stand text color'):
                 return '#282761'
+#        if(color_type =='unsold stand outline color'):
+#                return '#002F6C'
+#        if(color_type =='unsold stand fill color'):
+#                return '#41B6E6'
+#        if(color_type =='unsold stand text color'):
+#                return '#282761'
         if(color_type =='sold stand outline color'):
                 return '#6610f2'
         if(color_type =='sold stand fill color'):
                 return '#8745f2'
         if(color_type =='sold stand text color'):
-                return '#ffffff'
+                return '#000000'
 
         if(color_type =='price increase stand outline color'):
                 return '#198754'
@@ -326,22 +332,23 @@ def get_color(color_type):
 
 
 def get_gradient_color(value):
-    """
-    Returns a gradient color between red (#FF0000) and green (#00FF00) based on a value between 0 and 100.
-
-    Args:
-        value (int): A number between 0 and 100.
-
-    Returns:
-        str: A hexadecimal color string in the format #RRGGBB.
-    """
+    if(value is None):
+           return('#FF0000')
     if value < 0 or value > 100:
         raise ValueError("Value must be between 0 and 100")
 
-    red = int(255 * (100 - value) / 100)
-    green = int(255 * value / 100)
-    blue = 0  # No blue component in the gradient
-    return f"#{red:02X}{green:02X}{blue:02X}"
+    if value < 50:
+        red = 255
+        green = int(192 * (50 - value) / 50)  # Green decreases as value increases
+        blue = int(192 * (50 - value) / 50)  # Blue decreases as value increases
+    else:
+        green = 255
+        red = int(100 * (100 - value) / 50)  # Red decreases as value increases
+        blue = int(64 * (100 - value) / 50)  # Blue decreases as value increases
+#    print(f"value: {value}, red: {red}, green: {green}, blue: {blue}")
+    out_color = f"#{red:02X}{green:02X}{blue:02X}"
+#    print(f"out_color: {out_color}")
+    return out_color
 
 
 def print_ax_size(fig, gs, ax, from_def):
@@ -391,7 +398,7 @@ def new_place_circle(sq, x, y, xlen, ylen, fill_color, edge_color, fl_div, line_
 def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width, max_text_size):
         rect = patches.Rectangle((x*fl_div, y*fl_div), xlen*fl_div, ylen*fl_div, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
         sq.add_patch(rect)
-        if sq_text is not None:
+        if (sq_text is not None) and (len(sq_text) > 0):
                 title_str = sq_text[0][0]
                 info_set = sq_text[1:]
                 top_section = ylen*.4
@@ -536,25 +543,21 @@ def create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, 
         return(fig)
 
 
-def zzzfloorplan_new_place_isles(fig, ax, image_multiplier, fl_div):
-        isle_color = get_color('main aisle')
-        ax = new_place_rectangle(fig, ax, 10, 310, 1030, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0, 50)
-        ax = new_place_rectangle(fig, ax, 10, 260, 400, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0, 50)
-        return ax
 def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div):
         for x in stand_location.objects.filter(sl_stand__s_rx_event__re_name__iexact='ISC West 2025'):
                 #Available, Sold, New Sell, Reserved, New Stand
+                spg = x.sl_stand.s_stand_price_gradient
                 if(x.sl_stand.s_stand_status == 'Available'):
                         stand_fill_color = get_color('unsold stand fill color')
                         stand_outline_color = get_color('unsold stand outline color')
                         text_color = get_color('unsold stand text color')
                 if(x.sl_stand.s_stand_status == 'Sold'):
-                        stand_fill_color = get_color('sold stand fill color')
-                        stand_outline_color = get_color('sold stand outline color')
+                        stand_fill_color = get_gradient_color(spg)
+                        stand_outline_color = get_gradient_color(spg)
                         text_color = get_color('sold stand text color')
                 if(x.sl_stand.s_stand_status == 'New Sell'):
-                        stand_fill_color = get_color('sold stand fill color')
-                        stand_outline_color = get_color('sold stand outline color')
+                        stand_fill_color = get_gradient_color(spg)
+                        stand_outline_color = get_gradient_color(spg)
                         text_color = get_color('sold stand text color')
                         circle_fill_color = get_color('sold stand circle fill color')
                         circle_outline_color = get_color('sold stand circle outline color')
@@ -573,13 +576,13 @@ def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div):
 
                 if(x.sl_x_length * x.sl_y_length > 1):
                         new_stand = []
-                        if(x.sl_stand.s_name is not None and len(x.sl_stand.s_name) > 0):
-                                new_stand.append([str(x.sl_stand.s_name), 'center', 'top'])
-                        else:
-                                new_stand.append(['No Name Given', 'center', 'top'])
-                        new_stand.append(['Price: $20000', 'left', 'top'])
-                        new_stand.append(['Target: $30000', 'left', 'top'])
-
+                        if(x.sl_stand.s_stand_status in ('Sold', 'New Sell')):
+                                if(x.sl_stand.s_name is not None and len(x.sl_stand.s_name) > 0):
+                                        new_stand.append([str(x.sl_stand.s_name), 'center', 'top'])
+                                else:
+                                        new_stand.append(['No Name Given', 'center', 'top'])
+                                new_stand.append(['Price: $20000', 'left', 'top'])
+                                new_stand.append(['Target: $30000', 'left', 'top'])
                         ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50)
         return ax
 

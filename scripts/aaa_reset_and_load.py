@@ -9,144 +9,24 @@ from django.db.models import Max
 import numpy as np
 import pandas as pd
 from pandas._libs.tslibs.nattype import NaTType
-
+import random
 from base.models import *
 from scripts.aaa_helper_functions import *
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
-def zzzget_next_stand_id():
-    max_id = stands.objects.aggregate(max_id=Max('s_id'))['max_id']
-    return (max_id or 0) + 1
 def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
         st, created = stands.objects.update_or_create(s_rx_event= eve, 
                         s_name=stand_name,
                         s_number=stand_number,
                         defaults={
                                 's_stand_status':'Available', 
-                                's_stand_price':'Base'})
+                                's_stand_price':'Base',
+                                's_stand_price_gradient': random.randint(0, 100),})
 
         sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
                                 'sl_x':x, 'sl_y':y, 'sl_x_length':x_length, 'sl_y_length':y_length})
-
-def zzzpopulate_for_test():
-#        f.write("populate_for_test: " + str(timezone.now()) + "\n")
-#        record_log_data("aaa_load_test_data.py", "populate_for_test", "populate_for_test")
-
-        eve = rx_event.objects.update_or_create(re_name='ISC West 2025', defaults={
-                're_floor_length': 1080, 're_floor_height': 720,
-                're_event_start_date': timezone.datetime(2025, 3, 31, 0, 0, 0),
-                're_event_end_date': timezone.datetime(2025, 4, 4, 0, 0, 0)})
-
-        if(1==0):  #row 7
-                row_amt = 300
-
-                create_stand(eve, 'Stand 1', '1', 20, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 2', '2', 20, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 3', '3', 20, (row_amt - 20), 10, -10)
-                create_stand(eve, 'Stand 4', '4', 20, (row_amt - 30), 10, -10)
-                create_stand(eve, 'Stand 5', '5', 30, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 6', '6', 30, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 7', '7', 30, (row_amt - 20), 10, -20)
-
-                create_stand(eve, 'Stand 1', '1', 50, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 2', '2', 50, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 3', '3', 50, (row_amt - 20), 10, -10)
-                create_stand(eve, 'Stand 4', '4', 50, (row_amt - 30), 10, -10)
-                create_stand(eve, 'Stand 5', '5', 60, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 6', '6', 60, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 7', '7', 60, (row_amt - 20), 10, -20)
-
-                create_stand(eve, 'Stand 3', '3', 80, (row_amt - 0), 10, -30)
-                create_stand(eve, 'Stand 4', '4', 80, (row_amt - 30), 10, -10)
-                create_stand(eve, 'Stand 5', '5', 90, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 6', '6', 90, (row_amt - 20), 10, -20)
-
-                create_stand(eve, 'Stand 3', '3', 110, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 4', '4', 110, (row_amt - 20), 10, -20)
-                create_stand(eve, 'Stand 5', '5', 120, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 6', '6', 120, (row_amt - 20), 10, -20)
-
-                create_stand(eve, 'Stand 3', '3', 140, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 4', '4', 140, (row_amt - 20), 10, -20)
-                create_stand(eve, 'Stand 5', '5', 150, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 6', '6', 150, (row_amt - 20), 10, -20)
-
-                create_stand(eve, 'Stand 1', '1', 170, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 2', '2', 170, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 3', '3', 170, (row_amt - 20), 10, -20)
-                create_stand(eve, 'Stand 5', '5', 180, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 6', '6', 180, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 7', '7', 180, (row_amt - 20), 10, -20)
-
-                create_stand(eve, 'Stand 1', '1', 200, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 3', '3', 200, (row_amt - 20), 10, -20)
-                create_stand(eve, 'Stand 5', '5', 210, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 6', '6', 210, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 7', '7', 210, (row_amt - 20), 10, -20)
-
-                create_stand(eve, 'HID', '8053', 230, (row_amt - 0), 40, -40)
-                create_stand(eve, 'ASSA ABLOY Entrance Systems', '10053', 280, (row_amt - 0), 30, -40)
-                create_stand(eve, 'Bosch Security and Safety Systems', '11053', 320, (row_amt - 0), 80, -40)
-                create_stand(eve, 'AXis Communications Inc', '14051', 410, (row_amt - 0), 100, -50)
-                create_stand(eve, 'Milestone Systems', '18053', 520, (row_amt - 0), 60, -50)
-                create_stand(eve, 'Everon - Nationwide Commercial Security, Fire, and', '20051', 590, (row_amt - 0), 40, -50)
-                create_stand(eve, 'TP-Link Systems Inc.', '22053', 640, (row_amt - 0), 30, -50)
-                create_stand(eve, 'Stid - Smarter Security Answers', '23051', 680, (row_amt - 0), 30, -50)
-                create_stand(eve, 'Allegion', '25053', 720, (row_amt - 0), 30, -40)
-                create_stand(eve, 'Affiliated Monitoring, Inc.', '26055', 760, (row_amt - 0), 30, -30)
-
-                create_stand(eve, 'Stand 1', '1', 800, (row_amt - 0), 20, -10)
-                create_stand(eve, 'Stand 1', '1', 830, (row_amt - 0), 20, -30)
-                create_stand(eve, 'Stand 1', '1', 860, (row_amt - 0), 20, -30)
-                create_stand(eve, 'Stand 1', '1', 890, (row_amt - 0), 20, -30)
-
-                create_stand(eve, 'Stand 1', '1', 920, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 2', '2', 920, (row_amt - 20), 10, -20)
-                create_stand(eve, 'Stand 6', '6', 930, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 7', '7', 930, (row_amt - 20), 10, -20)
-
-                create_stand(eve, 'Stand 1', '1', 950, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 2', '2', 950, (row_amt - 20), 10, -20)
-                create_stand(eve, 'Stand 6', '6', 960, (row_amt - 0), 10, -20)
-                create_stand(eve, 'Stand 7', '7', 960, (row_amt - 20), 10, -20)
-
-                create_stand(eve, 'Stand 1', '1', 980, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 2', '2', 980, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 3', '3', 980, (row_amt - 20), 10, -20)
-                create_stand(eve, 'Stand 5', '5', 990, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 6', '6', 990, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 7', '7', 990, (row_amt - 20), 10, -10)
-                create_stand(eve, 'Stand 7', '7', 990, (row_amt - 30), 10, -10)
-
-                create_stand(eve, 'Stand 5', '5', 1010, (row_amt - 0), 10, -10)
-                create_stand(eve, 'Stand 6', '6', 1010, (row_amt - 10), 10, -10)
-                create_stand(eve, 'Stand 7', '7', 1010, (row_amt - 20), 10, -10)
-                create_stand(eve, 'Stand 7', '7', 1010, (row_amt - 30), 10, -10)
-                create_stand(eve, 'Stand 5', '5', 1020, (row_amt - 0), 10, -10)
-
-        if(1==0):  #row 7
-                create_stand(eve, 'Dorking Inc DKS', '20043', 590, 240, 40, -40)
-                create_stand(eve, 'Eagle Eye Networks', '20037', 590, 190, 40, -30)
-                create_stand(eve, 'Brivo', '20031', 590, 160, 40, -30)
-                create_stand(eve, 'Wesco', '20017', 590, 120, 40, -40)
-                create_stand(eve, 'dormakaba', '20007', 590, 70, 40, -40)
-                create_stand(eve, 'CDVI Americas', '20001', 590, 20, 40, -10)
-
-        if(1==0):  #row 7
-                create_stand(eve, 'Speco Technologies', '22059', 640, 310, 30, 30)
-                create_stand(eve, '3xLogic', '22067', 640, 350, 30, 30)
-                create_stand(eve, 'Suprema', '22075', 640, 390, 30, 40)
-                create_stand(eve, 'Qualvision Technology Co. Ltd', '22093', 640, 440, 40, 20)
-                create_stand(eve, 'Lounge', '22095', 640, 460, 40, 20)
-                create_stand(eve, '3Si', '22099', 640, 490, 30, 30)
-
-                create_stand(eve, 'Smarter Security', '23109', 655, 540, 20, 30)
-                create_stand(eve, 'Cheat 1', '1', 655, 580, 20, 30)
-                create_stand(eve, 'Cheat 2', '1', 655, 620, 20, 20)
-                create_stand(eve, 'Cheat 3', '1', 655, 650, 20, 20)
-                create_stand(eve, 'Cheat 4', '1', 655, 680, 20, 20)
 
 def create_event(ev_name, ev_start_date, ev_end_date):
         eve, create = rx_event.objects.update_or_create(re_name=ev_name, defaults={
@@ -284,6 +164,10 @@ def determine_floorplan_max_length_height(rxe):
 def reset_test_data():
 #        f.write("reset tables: " + str(timezone.now()) + "\n")
         rx_event.objects.all().delete()
+        log_page_data.objects.all().delete()
+        log_progress_data.objects.all().delete()
+        log_messages.objects.all().delete()
+        log_error_data.objects.all().delete()
 
 def run(*args):
 

@@ -91,12 +91,12 @@ def build_stand_counts_as_string(rxe, ev_date):
 
 
 def run_event_year(event_name, create_images):
-        record_log_data("aaa_helper_functions.py", "run_event_year", "starting...")
+        record_log_data("aaa_run_process.py", "run_event_year", "starting...")
 
         try:
                 rxe = rx_event.objects.get(re_name=event_name)
         except rx_event.DoesNotExist:
-                record_log_data("aaa_helper_functions.py", "run_event_year", "Event does not exist: " + event_name)
+                record_log_data("aaa_run_process.py", "run_event_year", "Event does not exist: " + event_name)
                 return
 
         st_date = rxe.re_event_start_date - relativedelta(days=365+90)
@@ -111,7 +111,7 @@ def run_event_year(event_name, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
         to_do = 0
-        while ev_date <= end_date and to_do < 999999:
+        while ev_date <= end_date and to_do < 99999:
 #        if (1 == 0):
                 if(ev_date == st_date):
                         if(create_images == True):
@@ -121,10 +121,10 @@ def run_event_year(event_name, create_images):
                                 footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
                                 render_floorplan(rxe, header_set, footer_set, message_set)
                 else:
+                        create_images = False
                         for x in event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)):
-#                                print(f"ev_date: {ev_date}, est_Order_Created_Date: {x.est_Order_Created_Date}, count: {event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)).count()}")
+                                record_log_data("aaa_run_process.py", "run_event_year", "working date: " + str(ev_date))
                                 for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
-#                                        print(f"x.est_Order_Created_Date, {x.est_Order_Created_Date}, count:{stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned).count()}")
 #                                        s_stand_status = Available, Sold, New Sell, Reserved, New Stand
 #                                        s_stand_price = Base, Price Increase, Price Decrease 
                                         fs.s_stand_status = 'New Sell'
@@ -139,9 +139,10 @@ def run_event_year(event_name, create_images):
                                                 render_floorplan(rxe, header_set, footer_set, message_set)
                                         fs.s_stand_status = 'Sold'
                                         fs.save()
-                                        build_stand_counts_by_date(rxe, ev_date)
+#                                        build_stand_counts_by_date(rxe, ev_date)
                                 to_do = to_do + 1
                 ev_date = ev_date + relativedelta(days=1)
+        create_images = True
         if(create_images == True):
                 footer_set = []
                 message_set = []
@@ -150,7 +151,7 @@ def run_event_year(event_name, create_images):
                 footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
                 render_floorplan(rxe, header_set, footer_set, message_set)
 
-        record_log_data("aaa_helper_functions.py", "run_event_year", "completed...")
+        record_log_data("aaa_run_process.py", "run_event_year", "completed...")
 
 
 def run(*args):
@@ -165,6 +166,13 @@ def run(*args):
         record_log_data("aaa_run_process.py", "run", "starting... reset data")
 #        aaa_reset_and_load.run()
         record_log_data("aaa_run_process.py", "run", "completed... load data")
+
+        for x in stands.objects.all():
+                x.s_stand_status = 'Available' 
+                x.s_stand_price = 'Base'
+                x.s_stand_price_gradient = random.randint(0, 100)
+                x.save()
+
 
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
         run_event_year('ISC West 2025', True)

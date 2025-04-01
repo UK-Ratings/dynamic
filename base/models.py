@@ -99,6 +99,8 @@ class stands(models.Model):
     s_stand_status = models.CharField("stand status", max_length=50, blank=True, null=True, )
     #Base, Price Increase, Price Decrease 
     s_stand_price = models.CharField("stand price", max_length=50, blank=True, null=True, )
+    s_stand_price_per_sq_ft = models.DecimalField("stand price per sq ft", max_digits=10, decimal_places=2, blank=True, null=True)
+    s_stand_price_gradient = models.IntegerField("stand price gradient", blank=True, null=True)
     class Meta:
         indexes = [
             models.Index(fields=['s_rx_event','s_number'], name='stand_index1'),
