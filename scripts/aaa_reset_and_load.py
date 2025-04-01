@@ -16,19 +16,21 @@ from scripts.aaa_helper_functions import *
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
-def get_next_stand_id():
+def zzzget_next_stand_id():
     max_id = stands.objects.aggregate(max_id=Max('s_id'))['max_id']
     return (max_id or 0) + 1
 def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
-        st, created = stands.objects.update_or_create(s_id=get_next_stand_id(), defaults={
-                's_rx_event': eve[0], 's_name': stand_name, 's_number': stand_number,
-#                's_stand_fill_color':'#000000', 's_stand_outline_color':'#000000', 's_text_color':'000000',
-                's_stand_status':'Available', 's_stand_price':'Base'})
+        st, created = stands.objects.update_or_create(s_rx_event= eve, 
+                        s_name=stand_name,
+                        s_number=stand_number,
+                        defaults={
+                                's_stand_status':'Available', 
+                                's_stand_price':'Base'})
 
-#                's_stand_fill_color':'#99B3CF', 's_stand_outline_color':'black', 's_text_color':'#000000'})
         sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
                                 'sl_x':x, 'sl_y':y, 'sl_x_length':x_length, 'sl_y_length':y_length})
-def populate_for_test():
+
+def zzzpopulate_for_test():
 #        f.write("populate_for_test: " + str(timezone.now()) + "\n")
 #        record_log_data("aaa_load_test_data.py", "populate_for_test", "populate_for_test")
 
@@ -37,7 +39,7 @@ def populate_for_test():
                 're_event_start_date': timezone.datetime(2025, 3, 31, 0, 0, 0),
                 're_event_end_date': timezone.datetime(2025, 4, 4, 0, 0, 0)})
 
-        if(1==1):  #row 7
+        if(1==0):  #row 7
                 row_amt = 300
 
                 create_stand(eve, 'Stand 1', '1', 20, (row_amt - 0), 10, -10)
@@ -124,7 +126,7 @@ def populate_for_test():
                 create_stand(eve, 'Stand 7', '7', 1010, (row_amt - 30), 10, -10)
                 create_stand(eve, 'Stand 5', '5', 1020, (row_amt - 0), 10, -10)
 
-        if(1==1):  #row 7
+        if(1==0):  #row 7
                 create_stand(eve, 'Dorking Inc DKS', '20043', 590, 240, 40, -40)
                 create_stand(eve, 'Eagle Eye Networks', '20037', 590, 190, 40, -30)
                 create_stand(eve, 'Brivo', '20031', 590, 160, 40, -30)
@@ -132,7 +134,7 @@ def populate_for_test():
                 create_stand(eve, 'dormakaba', '20007', 590, 70, 40, -40)
                 create_stand(eve, 'CDVI Americas', '20001', 590, 20, 40, -10)
 
-        if(1==1):  #row 7
+        if(1==0):  #row 7
                 create_stand(eve, 'Speco Technologies', '22059', 640, 310, 30, 30)
                 create_stand(eve, '3xLogic', '22067', 640, 350, 30, 30)
                 create_stand(eve, 'Suprema', '22075', 640, 390, 30, 40)
@@ -145,8 +147,19 @@ def populate_for_test():
                 create_stand(eve, 'Cheat 2', '1', 655, 620, 20, 20)
                 create_stand(eve, 'Cheat 3', '1', 655, 650, 20, 20)
                 create_stand(eve, 'Cheat 4', '1', 655, 680, 20, 20)
-def load_transaction_sales_data(rxe):
-        file_path = os.path.join(settings.BASE_DIR, 'data', 'ISC_West_25_data.xlsx')
+
+def create_event(ev_name, ev_start_date, ev_end_date):
+        eve, create = rx_event.objects.update_or_create(re_name=ev_name, defaults={
+                're_floor_length': 0, 're_floor_height': 0,
+                're_event_start_date': ev_start_date,
+                're_event_end_date': ev_end_date})
+        return eve
+def update_event_length_height(eve, fl_length, fl_height):
+        eve.re_floor_length = 1232#fl_length
+        eve.re_floor_height = 1052#fl_height
+        eve.save()
+def load_transaction_sales_data(rxe, filename):
+        file_path = os.path.join(settings.BASE_DIR, 'data', filename)
         if not os.path.exists(file_path):
                 raise FileNotFoundError(f"File not found: {file_path}")
 
@@ -235,8 +248,36 @@ def load_transaction_sales_data(rxe):
                                 x.est_Stand_Zone, x.est_Floor_Plan_Sector, x.est_Sharer_Entitlements, x.est_Sharer_Companies,
                                 x.est_Last_Modified_Date, x.est_Total_Net_Amount, x.est_Order_Created_Date, x.est_Packages_Sold,
                                 x.est_Product_Name, x.est_Stand_Name_Cleaned, x.est_Stand_Name_Dim_Cleaned)
+def load_floorplan_data(rxe, filename, ratio_multiplier):
+        file_path = os.path.join(settings.BASE_DIR, 'data', filename)
+        if not os.path.exists(file_path):
+                raise FileNotFoundError(f"File not found: {file_path}")
 
+        data = pd.read_excel(file_path)
 
+    # Iterate through each row and create instances of event_sales_transactions
+        for _, row in data.iterrows():
+                max_length, min_length, side_lengths = get_polygon_side_lengths(row['geometry'], ratio_multiplier)
+                xpos, ypos = get_nearest_position_to_origin(row['geometry'], ratio_multiplier)
+                create_stand(rxe, row['Display Name'], row['Stand: Stand Name'], xpos, ypos, row['Width'], row['Length'])#row['Length'], row['Width'])
+def determine_floorplan_max_length_height(rxe):
+
+        min_x_length = 0
+        min_y_length = 0
+        max_x_length = 0
+        max_y_length = 0
+
+        for x in stand_location.objects.filter(sl_stand__s_rx_event=rxe):
+                if(x.sl_x < min_x_length):
+                        min_x_length = x.sl_x + x.sl_x_length
+                if(x.sl_y < min_y_length):
+                        min_y_length = x.sl_y + x.sl_y_length   
+                if(x.sl_x + x.sl_x_length > max_x_length):
+                        max_x_length = x.sl_x + x.sl_x_length
+                if(x.sl_y + x.sl_y_length > max_y_length):
+                        max_y_length = x.sl_y + x.sl_y_length
+#        print("min_x_length: ", min_x_length, "min_y_length: ", min_y_length, "max_x_length: ", max_x_length, "max_y_length: ", max_y_length)
+        update_event_length_height(rxe, abs(min_x_length)+abs(max_x_length), abs(min_y_length)+abs(max_y_length))
 
 
 
@@ -260,11 +301,16 @@ def run(*args):
 
         record_log_data("aaa_reset_and_load.py", "reset data", "reset data")
         reset_test_data()
-        record_log_data("aaa_reset_and_load.py", "load data", "load data")
-        populate_for_test()
 
-        rxe = rx_event.objects.get(re_name='ISC West 2025')
-        load_transaction_sales_data(rxe)
+        rxe = create_event('ISC West 2025', timezone.datetime(2025, 3, 31, 0, 0, 0), timezone.datetime(2025, 4, 4, 0, 0, 0))
+
+        filename = 'ISC_West25_floorplan.xlsx'
+        ratio_multiplier = 8.333333
+        load_floorplan_data(rxe, filename, ratio_multiplier)
+        determine_floorplan_max_length_height(rxe)
+
+        filename = 'ISC_West_25_data.xlsx'
+        load_transaction_sales_data(rxe, filename)
 
 #        f.write("Complete: " + logs_filename + str(timezone.now()) + "\n")
 #        f.close()

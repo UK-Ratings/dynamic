@@ -11,6 +11,7 @@ from django.utils import timezone
 from django.contrib import messages
 from django.utils.translation import get_language
 from dotenv import load_dotenv
+from math import sqrt
 
 from base.models import *
 from users.models import *
@@ -91,6 +92,61 @@ def record_error_data(python_app, function_name, given_error_level, given_error_
         )
         log.save()
 
+def get_polygon_side_lengths(polygon_str, multiplier):
+    """
+    Calculate the side lengths of a polygon in feet from its coordinates.
+    
+    Args:
+        polygon_str (str): A string representation of the polygon, e.g.,
+                           "POLYGON 3 ((55.924326171875 57.80728515625, 67.924326171875 57.80728515625, ...))"
+        multiplier (float): A multiplier to convert the lengths to feet.
+    
+    Returns:
+        list: A list of side lengths in feet, rounded to the nearest integer.
+    """
+    # Extract the coordinates from the polygon string
+    coordinates_str = polygon_str.split("((")[1].split("))")[0]
+    coordinates = [
+        tuple(map(float, coord.split()))
+        for coord in coordinates_str.split(", ")
+    ]
+
+    # Calculate the side lengths
+    side_lengths = []
+    for i in range(len(coordinates) - 1):
+        x1, y1 = coordinates[i]
+        x2, y2 = coordinates[i + 1]
+        length = sqrt((x2 - x1) ** 2 + (y2 - y1) ** 2)
+        side_lengths.append(round(length * multiplier))
+    max_length = max(side_lengths)
+    min_length = min(side_lengths)
+
+    return max_length, min_length, side_lengths
+def get_nearest_position_to_origin(polygon_str, multiplier):
+    """
+    Find the nearest position to (0, 0) from the given polygon.
+
+    Args:
+        polygon_str (str): A string representation of the polygon, e.g.,
+                           "POLYGON 3 ((55.924326171875 57.80728515625, 67.924326171875 57.80728515625, ...))"
+
+    Returns:
+        tuple: The nearest position (x, y) to (0, 0).
+    """
+    # Extract the coordinates from the polygon string
+    coordinates_str = polygon_str.split("((")[1].split("))")[0]
+    coordinates = [
+        tuple(map(float, coord.split()))
+        for coord in coordinates_str.split(", ")
+    ]
+
+    # Find the nearest position to (0, 0)
+    nearest_position = min(coordinates, key=lambda coord: sqrt(coord[0]**2 + coord[1]**2))
+    xpos = round(multiplier*nearest_position[0])
+    ypos = round(multiplier*nearest_position[1])
+    return xpos, ypos
+
+
 def get_env_values():
         if os.environ.get("RX_IMAGE_LENGTH") is not None:
                 image_length = int(os.environ.get("RX_IMAGE_LENGTH"))
@@ -148,31 +204,54 @@ def write_pyplot_to_file(plt, media_directory, cdatetime):
     plt.savefig(plot_path, format='png', bbox_inches='tight')
     return cdatetime, plot_path
 def create_mov_from_images(media_directory, output_filename):
+    max_width = 1920
+    max_height = 1080
+    total_video_time_in_seconds = 60
+    fps = 30
+    total_frames = total_video_time_in_seconds * fps
+
     output_dir = os.path.join(settings.MEDIA_ROOT, 'movies')
     os.makedirs(output_dir, exist_ok=True)
     movie_filename = os.path.join(output_dir, output_filename)
 
-    dumps_dir = os.path.join(settings.MEDIA_ROOT, media_directory)
+    dumps_dir = os.path.join(settings.BASE_DIR, 'static/' + media_directory)
     images = [img for img in os.listdir(dumps_dir) if img.endswith(".png")]
     images.sort()  # Sort images by filename
+    tot_images = len(images)  # Corrected line to count images
 
     if not images:
         print("No images found in directory.")
         return
+
+    fps_per_image = int(total_frames / tot_images)
 
     # Read the first image to get the dimensions
     first_image_path = os.path.join(dumps_dir, images[0])
     frame = cv2.imread(first_image_path)
     height, width, layers = frame.shape
 
+    # Scale the dimensions if they exceed the maximum allowed size
+    if width > max_width or height > max_height:
+        scaling_factor = min(max_width / width, max_height / height)
+        new_width = int(width * scaling_factor)
+        new_height = int(height * scaling_factor)
+    else:
+        new_width, new_height = width, height
+
     # Define the codec and create VideoWriter object
     fourcc = cv2.VideoWriter_fourcc(*'mp4v')  # Codec for MOV file
-    video = cv2.VideoWriter(movie_filename, fourcc, 1, (width, height))
+    video = cv2.VideoWriter(movie_filename, fourcc, fps, (new_width, new_height))
 
     for image in images:
         image_path = os.path.join(dumps_dir, image)
         frame = cv2.imread(image_path)
-        video.write(frame)
+
+        # Resize the frame if necessary
+        if width > max_width or height > max_height:
+            frame = cv2.resize(frame, (new_width, new_height), interpolation=cv2.INTER_AREA)
+
+        for _ in range(fps_per_image):
+            video.write(frame)
 
     video.release()
     print(f"Video saved as {movie_filename}")
@@ -246,6 +325,23 @@ def get_color(color_type):
         return '#000000'
 
 
+def get_gradient_color(value):
+    """
+    Returns a gradient color between red (#FF0000) and green (#00FF00) based on a value between 0 and 100.
+
+    Args:
+        value (int): A number between 0 and 100.
+
+    Returns:
+        str: A hexadecimal color string in the format #RRGGBB.
+    """
+    if value < 0 or value > 100:
+        raise ValueError("Value must be between 0 and 100")
+
+    red = int(255 * (100 - value) / 100)
+    green = int(255 * value / 100)
+    blue = 0  # No blue component in the gradient
+    return f"#{red:02X}{green:02X}{blue:02X}"
 
 
 def print_ax_size(fig, gs, ax, from_def):
@@ -260,29 +356,12 @@ def print_ax_size(fig, gs, ax, from_def):
                 print(f"   ax: width {width} inches, height {height} inches")
         else:
                 print(f"   ax: None")
-def zzzfigure_small_font_size(first_line_font_size):
-        if(first_line_font_size > 0):
-                sm_font = 5
-                line_height = 10
-        if(first_line_font_size > 10):
-                sm_font = 6
-                line_height = 14
-        if(first_line_font_size > 30):
-                sm_font = 18
-                line_height = 40
-        if(first_line_font_size > 50):
-                sm_font = 24
-                line_height = 60
-        if(first_line_font_size > 75):
-                sm_font = 40
-                line_height = 85
-        return sm_font, line_height
-
 def calculate_max_font_size(fig, sq, text, available_width, available_height, fl_div, max_font_size):
     """
     Calculate the maximum font size so that the text fits within the available width and height.
     """
     renderer = fig.canvas.get_renderer()
+#    print(f"available_width: {available_width}, available_height: {available_height}, max_font_size: {max_font_size}")
 
     for font_size in range(max_font_size, 0, -1):  # Start from max_font_size and decrease
         text_obj = sq.text(500, 500, text, fontsize=font_size, ha='center', va='center', visible=True)
@@ -293,7 +372,7 @@ def calculate_max_font_size(fig, sq, text, available_width, available_height, fl
 #        print(f"text_obj: {text_obj} font_size: {font_size}, text_width: {text_width}, text_height: {text_height}, available_width: {available_width}, available_height: {available_height}")
         if text_width <= available_width and text_height <= available_height:
             return font_size, text_width, text_height  # Return the font size that fits
-    return 1  # Return a minimum font size if no size fits
+    return 1, 1, 1  # Return a minimum font size if no size fits
 
 
 def new_place_circle(sq, x, y, xlen, ylen, fill_color, edge_color, fl_div, line_width):
@@ -457,7 +536,7 @@ def create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, 
         return(fig)
 
 
-def floorplan_new_place_isles(fig, ax, image_multiplier, fl_div):
+def zzzfloorplan_new_place_isles(fig, ax, image_multiplier, fl_div):
         isle_color = get_color('main aisle')
         ax = new_place_rectangle(fig, ax, 10, 310, 1030, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0, 50)
         ax = new_place_rectangle(fig, ax, 10, 260, 400, -10, image_multiplier, isle_color, isle_color, None, 'black', fl_div, 0, 50)
@@ -492,12 +571,16 @@ def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div):
                         stand_outline_color = get_color('price decrease stand outline color')
                         text_color = get_color('price decrease stand text color')
 
-                new_stand = []
-                new_stand.append([x.sl_stand.s_name, 'center', 'top'])
-                new_stand.append(['Price: $20000', 'left', 'top'])
-                new_stand.append(['Target: $30000', 'left', 'top'])
+                if(x.sl_x_length * x.sl_y_length > 1):
+                        new_stand = []
+                        if(x.sl_stand.s_name is not None and len(x.sl_stand.s_name) > 0):
+                                new_stand.append([str(x.sl_stand.s_name), 'center', 'top'])
+                        else:
+                                new_stand.append(['No Name Given', 'center', 'top'])
+                        new_stand.append(['Price: $20000', 'left', 'top'])
+                        new_stand.append(['Target: $30000', 'left', 'top'])
 
-                ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50)
+                        ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50)
         return ax
 
 def new_place_header(fig, gs, image_margin, header_space, image_length, image_height, image_multiplier, header_set, footer_space):
@@ -559,7 +642,6 @@ def floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_l
         ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
                          image_multiplier, '#ffffff', '#000000', None, '#000000', 1, 3, 100)
 
-        ax = floorplan_new_place_isles(fig, ax, image_multiplier, fl_div)
         ax = floorplan_new_place_stands(fig, ax, image_multiplier, fl_div)
         return(fig)
 
@@ -577,8 +659,6 @@ def render_floorplan(rxe, header_set, footer_set, message_set):
         plt_length = int((image_length*image_multiplier)/100.0)
         plt_height = int((image_height*image_multiplier)/100.0)
 
-#        iw, ih = get_text_dimensions_temp("Hello World", 50)
-#        iw, ih = get_text_dimensions_temp("Hello World", 500)
 
         fig = plt.figure(figsize=(plt_length, plt_height))    #x, y
         gs = gridspec.GridSpec(plt_height*100, plt_length*100, figure = fig)  # rows, columns
@@ -600,6 +680,4 @@ def render_floorplan(rxe, header_set, footer_set, message_set):
 
         record_log_data("aaa_helper_functions.py", "run_event_year", "completed: event name: " + str(rxe.re_name))
         return pyplot_filename
-
-
 

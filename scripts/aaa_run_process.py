@@ -101,8 +101,7 @@ def run_event_year(event_name, create_images):
 
         st_date = rxe.re_event_start_date - relativedelta(days=365+90)
         ev_date = st_date
-        end_date = timezone.make_aware(datetime(2024, 3, 30, 0, 0, 0, 0))
-#        end_date = rxe.re_event_end_date + relativedelta(days=7)
+        end_date = rxe.re_event_end_date#timezone.make_aware(datetime(2024, 3, 30, 0, 0, 0, 0))
         image_length, image_height, image_margin, header_space, footer_space, image_multiplier, static_floorplan_loc, static_analysis_loc = get_env_values()
         erase_files_in_dir(static_floorplan_loc)
 
@@ -111,8 +110,8 @@ def run_event_year(event_name, create_images):
         header_set.append(["Las Vegas, NV", 'center', 'top'])
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
-
-        while ev_date <= end_date:
+        to_do = 0
+        while ev_date <= end_date and to_do < 999999:
 #        if (1 == 0):
                 if(ev_date == st_date):
                         if(create_images == True):
@@ -123,7 +122,9 @@ def run_event_year(event_name, create_images):
                                 render_floorplan(rxe, header_set, footer_set, message_set)
                 else:
                         for x in event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)):
+#                                print(f"ev_date: {ev_date}, est_Order_Created_Date: {x.est_Order_Created_Date}, count: {event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)).count()}")
                                 for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
+#                                        print(f"x.est_Order_Created_Date, {x.est_Order_Created_Date}, count:{stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned).count()}")
 #                                        s_stand_status = Available, Sold, New Sell, Reserved, New Stand
 #                                        s_stand_price = Base, Price Increase, Price Decrease 
                                         fs.s_stand_status = 'New Sell'
@@ -139,6 +140,7 @@ def run_event_year(event_name, create_images):
                                         fs.s_stand_status = 'Sold'
                                         fs.save()
                                         build_stand_counts_by_date(rxe, ev_date)
+                                to_do = to_do + 1
                 ev_date = ev_date + relativedelta(days=1)
         if(create_images == True):
                 footer_set = []
@@ -168,7 +170,8 @@ def run(*args):
         run_event_year('ISC West 2025', True)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
-#    create_mov_from_images('images', 'output.mp4')
+
+#        create_mov_from_images('floorplans', 'output.mp4')
 
 #        f.write("Complete: " + logs_filename + str(timezone.now()) + "\n")
 #        f.close()
