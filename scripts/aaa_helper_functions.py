@@ -20,6 +20,9 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as patches
 
+from scripts.aaa_stand_analysis import get_stand_analysis
+
+
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
 def record_page_data(python_app, function_name, request):
@@ -172,6 +175,10 @@ def get_env_values():
                 image_multiplier = int(os.environ.get("RX_FLOORPLAN_IMAGE_MULTIPLIER"))
         else:
                 image_multiplier = None
+        if os.environ.get("RX_FLOORPLAN_IMAGE_MULTIPLIER_SMALL") is not None:
+                image_multiplier_small = int(os.environ.get("RX_FLOORPLAN_IMAGE_MULTIPLIER_SMALL"))
+        else:
+                image_multiplier_small = None
         if os.environ.get("RX_STATIC_FLOORPLAN_LOCATION") is not None:
                 static_floorplan_loc = str(os.environ.get("RX_STATIC_FLOORPLAN_LOCATION"))
         else:
@@ -181,7 +188,7 @@ def get_env_values():
         else:
                 static_analysis_loc = None
         return image_length, image_height, image_margin, header_space, footer_space, \
-                                image_multiplier, static_floorplan_loc, static_analysis_loc
+                                image_multiplier, image_multiplier_small, static_floorplan_loc, static_analysis_loc
 def erase_files_in_dir(media_directory):
 
     dumps_dir = os.path.join(settings.BASE_DIR, 'static/'+media_directory)
@@ -256,6 +263,7 @@ def create_mov_from_images(media_directory, output_filename):
     video.release()
     print(f"Video saved as {movie_filename}")
 
+def get_color(color_type):
 
 #--gbr-red : #e31f26;
 #--gbr-dark-red : #aa1b1f;
@@ -283,7 +291,6 @@ def create_mov_from_images(media_directory, output_filename):
 #--bs-cyan : #0dcaf0;
 
 
-def get_color(color_type):
         #blue for unsold
         if(color_type =='unsold stand outline color'):
                 return '#002F6C'
@@ -329,27 +336,36 @@ def get_color(color_type):
                 return '#808080'
 #default to black
         return '#000000'
-
-
 def get_gradient_color(value):
     if(value is None):
            return('#FF0000')
-    if value < 0 or value > 100:
-        raise ValueError("Value must be between 0 and 100")
+    if value < 0:
+        value = 0
+    if value > 100:
+        value = 100
 
     if value < 50:
-        red = 255
-        green = int(192 * (50 - value) / 50)  # Green decreases as value increases
-        blue = int(192 * (50 - value) / 50)  # Blue decreases as value increases
+#        1 is 170, 27, 31
+#        49 is 255, 173, 173
+        red = int(((255-170) * value / 50) + 170)
+        green = int(((173-27) * value / 50) + 27)
+        blue = int(((173-31) * value / 50) + 31)
     else:
-        green = 255
-        red = int(100 * (100 - value) / 50)  # Red decreases as value increases
-        blue = int(64 * (100 - value) / 50)  # Blue decreases as value increases
+#        50 is 161, 251, 142
+#       100 is 25, 135, 84                
+        green = int(251 - ((251-135) * ((value-50) / 50)))
+        blue = int(142 - ((142-84) * ((value-50) / 50)))
+        red = int(161 - ((161-25) * ((value-50) / 50)))
+#        red = int(100 * (100 - value) / 50)  # Red decreases as value increases
+#        blue = int(64 * (100 - value) / 50)  # Blue decreases as value increases
+    if value == 0:
+        red = 200
+        green = 200
+        blue = 200
 #    print(f"value: {value}, red: {red}, green: {green}, blue: {blue}")
     out_color = f"#{red:02X}{green:02X}{blue:02X}"
 #    print(f"out_color: {out_color}")
     return out_color
-
 
 def print_ax_size(fig, gs, ax, from_def):
         print(f"{from_def}... ")
@@ -381,7 +397,6 @@ def calculate_max_font_size(fig, sq, text, available_width, available_height, fl
             return font_size, text_width, text_height  # Return the font size that fits
     return 1, 1, 1  # Return a minimum font size if no size fits
 
-
 def new_place_circle(sq, x, y, xlen, ylen, fill_color, edge_color, fl_div, line_width):
     radius = (xlen) * fl_div  # Adjust as needed for your use case
     xcir = x + xlen/2
@@ -394,7 +409,6 @@ def new_place_circle(sq, x, y, xlen, ylen, fill_color, edge_color, fl_div, line_
     sq.add_patch(circle)
 
     return sq
-
 def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width, max_text_size):
         rect = patches.Rectangle((x*fl_div, y*fl_div), xlen*fl_div, ylen*fl_div, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
         sq.add_patch(rect)
@@ -542,7 +556,6 @@ def create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, 
                 top_pos_y = top_pos_y - (4*image_multiplier)  # Adjust spacing between lines
         return(fig)
 
-
 def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div):
         for x in stand_location.objects.filter(sl_stand__s_rx_event__re_name__iexact='ISC West 2025'):
                 #Available, Sold, New Sell, Reserved, New Stand
@@ -581,8 +594,13 @@ def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div):
                                         new_stand.append([str(x.sl_stand.s_name), 'center', 'top'])
                                 else:
                                         new_stand.append(['No Name Given', 'center', 'top'])
-                                new_stand.append(['Price: $20000', 'left', 'top'])
-                                new_stand.append(['Target: $30000', 'left', 'top'])
+                                rsa = stand_analysis.objects.filter(sa_stand=x.sl_stand).order_by('sa_analysis_number')
+                                for r in rsa:
+                                        sa_analysis_number, sa_analysis_title, sa_analysis_value = get_stand_analysis(r.sa_stand, None, r.sa_analysis_title)
+                                        new_stand.append([str(sa_analysis_title)+": "+str(sa_analysis_value), 'left', 'top'])
+#
+#                                new_stand.append(['Price: $20000', 'left', 'top'])
+#                                new_stand.append(['Target: $30000', 'left', 'top'])
                         ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50)
         return ax
 
@@ -648,8 +666,7 @@ def floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_l
         ax = floorplan_new_place_stands(fig, ax, image_multiplier, fl_div)
         return(fig)
 
-
-def render_floorplan(rxe, header_set, footer_set, message_set):
+def render_floorplan(rxe, header_set, footer_set, message_set, image_multiplier, floorplan_type):
         record_log_data("aaa_helper_functions.py", "run_event_year", "starting: event name: " + str(rxe.re_name))
 
         st_timezone = timezone.now()
@@ -658,10 +675,9 @@ def render_floorplan(rxe, header_set, footer_set, message_set):
         floor_length = rxe.re_floor_length
         floor_height = rxe.re_floor_height
 
-        image_length, image_height, image_margin, header_space, footer_space, image_multiplier, static_floorplan_loc, static_analysis_loc = get_env_values()
+        image_length, image_height, image_margin, header_space, footer_space, im_multi, im_multi_sm, static_floorplan_loc, static_analysis_loc = get_env_values()
         plt_length = int((image_length*image_multiplier)/100.0)
         plt_height = int((image_height*image_multiplier)/100.0)
-
 
         fig = plt.figure(figsize=(plt_length, plt_height))    #x, y
         gs = gridspec.GridSpec(plt_height*100, plt_length*100, figure = fig)  # rows, columns
@@ -673,7 +689,6 @@ def render_floorplan(rxe, header_set, footer_set, message_set):
         fig = new_place_header(fig, gs, image_margin, header_space, image_length, image_height, image_multiplier, header_set, footer_space)
         fig = floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floor_length, floor_height)
 
-
 #        fig = create_analysis1_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 3, analysis_set_1)
 #        fig = create_analysis2_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 3, 1, analysis_set_1)
 #        fig = create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 4, 1, analysis_set_1)
@@ -683,4 +698,5 @@ def render_floorplan(rxe, header_set, footer_set, message_set):
 
         record_log_data("aaa_helper_functions.py", "run_event_year", "completed: event name: " + str(rxe.re_name))
         return pyplot_filename
+
 

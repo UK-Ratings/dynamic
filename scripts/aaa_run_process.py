@@ -24,43 +24,9 @@ from dateutil.relativedelta import relativedelta
 
 from scripts import aaa_reset_and_load
 from scripts.aaa_helper_functions import *
+from scripts.aaa_stand_analysis import *
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
-
-def run_event():
-        record_log_data("aaa_helper_functions.py", "run_event_year", "starting...")
-
-        image_length, image_height, image_margin, header_space, footer_space, image_multiplier, static_floorplan_loc, static_analysis_loc = get_env_values()
-        erase_files_in_dir(static_floorplan_loc)
-
-        rxe = rx_event.objects.get(re_name='ISC West 2025')
-
-        for x in event_sales_transactions.objects.filter(est_event=rxe).order_by('est_Order_Created_Date'):
-                found_stand = False
-                for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
-#                        print(x.est_Order_Created_Date,fs.s_number, fs.s_name, fs.s_rx_event.re_name)
-
-#                        fs.s_stand_fill_color = get_color('sold stand outline color')
-#                        fs.s_stand_outline_color = get_color('sold stand outline color')
-#                        fs.s_text_color = get_color('sold stand text color')
-                        fs.save()
-                        found_stand = True
-                if found_stand == True:        
-                        header_set = []
-                        footer_set = []
-                        message_set = []
-                        header_set.append("ISC West 2025")
-                        header_set.append("Las Vegas, NV")
-                        header_set.append(str(rxe.re_event_start_date) + " to " + str(rxe.re_event_end_date))
-
-                        footer_set.append("EVENT: Stand Sale: " + str(x.est_Company_Name) + " at: "+str(x.est_Stand_Name_Cleaned))
-                        footer_set.append("Las Vegas, NV")
-                        footer_set.append("Blah, Blah, Blah")
-                        render_floorplan(rxe, header_set, footer_set, message_set)
-
-        record_log_data("aaa_helper_functions.py", "run_event_year", "completed...")
-
-
 
 
 def build_stand_counts_by_date(rxe, ev_date):
@@ -102,7 +68,7 @@ def run_event_year(event_name, create_images):
         st_date = rxe.re_event_start_date - relativedelta(days=365+90)
         ev_date = st_date
         end_date = rxe.re_event_end_date#timezone.make_aware(datetime(2024, 3, 30, 0, 0, 0, 0))
-        image_length, image_height, image_margin, header_space, footer_space, image_multiplier, static_floorplan_loc, static_analysis_loc = get_env_values()
+        image_length, image_height, image_margin, header_space, footer_space, image_multiplier, image_multiplier_small, static_floorplan_loc, static_analysis_loc = get_env_values()
         erase_files_in_dir(static_floorplan_loc)
 
         header_set = []
@@ -111,18 +77,17 @@ def run_event_year(event_name, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
         to_do = 0
-        while ev_date <= end_date and to_do < 99999:
+        while ev_date <= end_date and to_do < 99999999:
 #        if (1 == 0):
                 if(ev_date == st_date):
-                        if(create_images == True):
-                                footer_set = []
-                                message_set = []
-                                footer_set.append(["INITAL VIEW", 'center', 'top'])
-                                footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
-                                render_floorplan(rxe, header_set, footer_set, message_set)
+                        footer_set = []
+                        message_set = []
+                        footer_set.append(["INITAL VIEW", 'center', 'top'])
+                        footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
+                        render_floorplan(rxe, header_set, footer_set, message_set, image_multiplier, "Initial")
                 else:
-                        create_images = False
                         for x in event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)):
+                                print(f"event_sales_transactions: {x.est_Order_Created_Date} {x.est_Stand_Name_Cleaned} {x.est_Company_Name}")
                                 record_log_data("aaa_run_process.py", "run_event_year", "working date: " + str(ev_date))
                                 for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
 #                                        s_stand_status = Available, Sold, New Sell, Reserved, New Stand
@@ -136,20 +101,19 @@ def run_event_year(event_name, create_images):
                                                 footer_set.append(["EVENT: Stand Sale: " + str(x.est_Company_Name) + " at: "+str(x.est_Stand_Name_Cleaned) + " on: "+str(ev_date), 'center', 'top'])
                                                 footer_set.append(["Las Vegas, NV", 'left', 'top'])
                                                 footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
-                                                render_floorplan(rxe, header_set, footer_set, message_set)
+                                                if(create_images):
+                                                        render_floorplan(rxe, header_set, footer_set, message_set, image_multiplier_small, "NA")
                                         fs.s_stand_status = 'Sold'
                                         fs.save()
 #                                        build_stand_counts_by_date(rxe, ev_date)
                                 to_do = to_do + 1
                 ev_date = ev_date + relativedelta(days=1)
-        create_images = True
-        if(create_images == True):
-                footer_set = []
-                message_set = []
-                footer_set.append(["FINAL VIEW", 'center', 'top'])
-                footer_set.append(["blah, blah, blah", 'left', 'top'])
-                footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
-                render_floorplan(rxe, header_set, footer_set, message_set)
+        footer_set = []
+        message_set = []
+        footer_set.append(["FINAL VIEW", 'center', 'top'])
+        footer_set.append(["blah, blah, blah", 'left', 'top'])
+        footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
+        render_floorplan(rxe, header_set, footer_set, message_set, image_multiplier, "Final")
 
         record_log_data("aaa_run_process.py", "run_event_year", "completed...")
 
@@ -163,21 +127,22 @@ def run(*args):
 
         logs_filename = path_logs+"_"+os.path.splitext(os.path.basename(__file__))[0] + ".txt"
 
-        record_log_data("aaa_run_process.py", "run", "starting... reset data")
-#        aaa_reset_and_load.run()
-        record_log_data("aaa_run_process.py", "run", "completed... load data")
-
         for x in stands.objects.all():
+                stand_analysis.objects.filter(sa_stand=x).delete()
                 x.s_stand_status = 'Available' 
                 x.s_stand_price = 'Base'
                 x.s_stand_price_gradient = random.randint(0, 100)
                 x.save()
 
+        record_log_data("aaa_run_process.py", "run", "starting... reset data")
+#        aaa_reset_and_load.run()
+        record_log_data("aaa_run_process.py", "run", "completed... load data")
 
+        stand_analysis_price('ISC West 2025')
+        build_stand_gradient('ISC West 2025')
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-        run_event_year('ISC West 2025', True)
+        run_event_year('ISC West 2025', False)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
-
 
 #        create_mov_from_images('floorplans', 'output.mp4')
 

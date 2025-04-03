@@ -14,7 +14,6 @@ class log_page_data(models.Model):
     page_user_os = models.CharField(max_length=100, null=True, blank=True)
     page_user_browser = models.CharField(max_length=100, null=True, blank=True)
     
-
 class log_progress_data(models.Model):
     current_datetime = models.DateTimeField("Current Date Time", blank=True, null=True)
     python_app = models.CharField(max_length=100, null=True, blank=True)
@@ -44,7 +43,11 @@ class log_messages(models.Model):
         indexes = [
             models.Index(fields=['current_datetime'], name='messages_index1'),]
 
+class rx_event_group(models.Model):
+    reg_name = models.CharField("RX Event Group Name", max_length=300)
+
 class rx_event(models.Model):
+    re_event_group = models.ForeignKey(rx_event_group, blank=True, null=True, on_delete=models.CASCADE)
     re_name = models.CharField("RX Event Name", max_length=300)
     re_floor_length = models.IntegerField("RX Event Floor Length", blank=True, null=True)
     re_floor_height = models.IntegerField("RX Event Floor Height", blank=True, null=True)
@@ -62,11 +65,6 @@ class event_stand_count_by_date(models.Model):
         indexes = [
             models.Index(fields=['escby_rx_event','escby_date', 'escby_stand_status', 'escby_x_length', 'escby_y_length'], name='escby_index1'),
             ]
-
-
-
-
-
 
 class event_sales_transactions(models.Model):
     est_event = models.ForeignKey(rx_event, blank=True, null=True, on_delete=models.CASCADE)
@@ -113,7 +111,21 @@ class stand_location(models.Model):
     sl_y = models.IntegerField("stand y")
     sl_x_length = models.IntegerField("stand x length")
     sl_y_length = models.IntegerField("stand y length")
+    class Meta:
+        indexes = [
+            models.Index(fields=['sl_stand'], name='stand_location_index1'),
+        ]
 
-
-
+class stand_analysis(models.Model):
+    sa_stand = models.ForeignKey(stands, blank=True, null=True, on_delete=models.CASCADE)
+    sa_analysis_number = models.IntegerField("analysis number")
+    sa_analysis_title = models.CharField("analysis title", max_length=300, blank=True, null=True, )
+    sa_analysis_value = models.CharField("analysis value", max_length=300, blank=True, null=True, )
+    sa_analysis_type = models.CharField("analysis type", max_length=50, blank=True, null=True, )
+    sa_analysis_datetime = models.DateTimeField("analysis datetime", blank=True, null=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=['sa_stand', 'sa_analysis_number'], name='stand_analysis_index1'),
+            models.Index(fields=['sa_stand', 'sa_analysis_title'], name='stand_analysis_index2'),
+        ]
 
