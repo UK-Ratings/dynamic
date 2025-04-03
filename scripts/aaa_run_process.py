@@ -77,7 +77,7 @@ def run_event_year(event_name, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
         to_do = 0
-        while ev_date <= end_date and to_do < 99999999:
+        while ev_date <= end_date and to_do < 3:
 #        if (1 == 0):
                 if(ev_date == st_date):
                         footer_set = []
@@ -141,7 +141,7 @@ def run(*args):
         stand_analysis_price('ISC West 2025')
         build_stand_gradient('ISC West 2025')
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-        run_event_year('ISC West 2025', False)
+        run_event_year('ISC West 2025', True)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
 #        create_mov_from_images('floorplans', 'output.mp4')

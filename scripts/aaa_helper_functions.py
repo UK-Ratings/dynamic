@@ -409,37 +409,42 @@ def new_place_circle(sq, x, y, xlen, ylen, fill_color, edge_color, fl_div, line_
     sq.add_patch(circle)
 
     return sq
-def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width, max_text_size):
+
+def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width, max_text_size, text_bottom_up, top_section_percent):
         rect = patches.Rectangle((x*fl_div, y*fl_div), xlen*fl_div, ylen*fl_div, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
         sq.add_patch(rect)
         if (sq_text is not None) and (len(sq_text) > 0):
                 title_str = sq_text[0][0]
                 info_set = sq_text[1:]
-                top_section = ylen*.4
-                bottom_section = ylen*.6
+#                if(text_bottom_up):
+#                        info_set = list(reversed(info_set))
+                top_section = ylen*top_section_percent
+                bottom_section = ylen*(1-top_section_percent)
                 padding = 1  # Add some padding around the text
 
-                available_width = abs(xlen - (xlen*.25)) * fl_div #int(abs((xlen * fl_div) - ((xlen/5) * (padding*fl_div))))
-                available_height = abs(top_section - (top_section * .25)) * fl_div
-                title_font_size, text_width, text_height = calculate_max_font_size(fig, sq, title_str, available_width, available_height, fl_div, max_text_size)
-                top_line = sq_text[0]
-                if(top_line[1] == 'center'):
-                        xxpos = x * fl_div + xlen * fl_div / 2  # Center horizontally
-                else:
-                        xxpos = (x+1)*fl_div
-                if(ylen > 0):
-                        yypos = ((y * fl_div) + (ylen * fl_div) - (padding*fl_div))  # Position at the top with padding
-                else:
-                        yypos = ((y * fl_div) - (padding*fl_div))  # Position at the top with padding
-                sq.text(
-                        xxpos,  
-                        yypos,
-                        top_line[0],
-                        color=sq_text_color,
-                        ha=top_line[1],
-                        va=top_line[2],
-                        fontsize=int(title_font_size)
-                        )
+                if(1==1):
+                        available_width = abs(xlen - (xlen*.25)) * fl_div #int(abs((xlen * fl_div) - ((xlen/5) * (padding*fl_div))))
+                        available_height = abs(top_section - (top_section * .25)) * fl_div
+                        title_font_size, text_width, text_height = calculate_max_font_size(fig, sq, title_str, available_width, available_height, fl_div, max_text_size)
+        
+                        top_line = sq_text[0]
+                        if(top_line[1] == 'center'):
+                                xxpos = x * fl_div + xlen * fl_div / 2  # Center horizontally
+                        else:
+                                xxpos = (x+1)*fl_div
+                        if(ylen > 0):
+                                yypos = ((y * fl_div) + (ylen * fl_div) - (padding*fl_div))  # Position at the top with padding
+                        else:
+                                yypos = ((y * fl_div) - (padding*fl_div))  # Position at the top with padding
+                        sq.text(
+                                xxpos,  
+                                yypos,
+                                top_line[0],
+                                color=sq_text_color,
+                                ha=top_line[1],
+                                va=top_line[2],
+                                fontsize=int(title_font_size)
+                                )
                 if(len(info_set) > 0):
 #                if(1==0):
                         available_height = abs(bottom_section - (bottom_section * .25)) * fl_div
@@ -451,17 +456,24 @@ def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color,
                                 if(bfs <= bottom_font_size):
                                         bottom_font_size = bfs
                                         bottom_text_height = text_height + text_height*.15
+                        total_bottom_text_height = bottom_text_height * len(info_set)
                         if(qq[1] == 'center'):
                                 xxpos = x * fl_div + xlen * fl_div / 2  # Center horizontally
                         else:
                                 xxpos = (x+1)*fl_div
-                        if(ylen > 0):
-                                ypos = ((y)*fl_div) + bottom_text_height 
+                        if(text_bottom_up):
+                                if(ylen > 0):
+                                        ypos = ((y)*fl_div) + total_bottom_text_height#+ bottom_text_height 
+                                else:
+                                        ypos = ((y+ylen)*fl_div) + total_bottom_text_height# + bottom_text_height
                         else:
-                                ypos = ((y+ylen)*fl_div) + bottom_text_height
-                        for qq in reversed(info_set):
+                                if(ylen > 0):
+                                        ypos = ((y * fl_div) + (ylen * fl_div) - (padding*fl_div) - (top_section*fl_div))  # Position at the top with padding
+                                else:
+                                        ypos = ((y * fl_div) - (padding*fl_div) - (top_section*fl_div))  # Position at the top with padding
+                        for qq in info_set:
                                 sq.text(
-                                        xxpos,  # Center horizontally
+                                        xxpos,
                                         ypos,
                                         qq[0],
                                         color=sq_text_color,
@@ -469,8 +481,9 @@ def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color,
                                         va=qq[2],
                                         fontsize=int(bottom_font_size))
 
-                                ypos += (bottom_text_height)  # Adjust vertical position for the next line#
+                                ypos -= (bottom_text_height)  # Adjust vertical position for the next line#
         return sq
+
 def create_outer_square(fig, gs, plt_length, plt_height, image_multiplier):
         ax = fig.add_subplot(gs[:, :])  # Use the entire grid for the main plot
 #        print_ax_size(fig, gs, ax, "create_outer_square")
@@ -481,10 +494,10 @@ def create_outer_square(fig, gs, plt_length, plt_height, image_multiplier):
         ax.axis('off')
         # Add a rectangle around the entire plot
         test_text = None
-        ax = new_place_rectangle(fig, ax, 0, 0, plt_length*image_multiplier, plt_height*image_multiplier, image_multiplier, '#ffffff', '#ffffff', None, '#000000', 1, 3, 100)
+        ax = new_place_rectangle(fig, ax, 0, 0, plt_length*image_multiplier, plt_height*image_multiplier, image_multiplier, '#ffffff', '#ffffff', None, '#000000', 1, 3, 100, True, 0.4)
         return(fig)
 
-def create_analysis1_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, analysis_sections, analysis_section_height, analysis_set):
+def zzzcreate_analysis1_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, analysis_sections, analysis_section_height, analysis_set):
         ax_upper_x = (image_length - (int(((image_length)/4)))) * image_multiplier
         ax_upper_y = (((image_margin*2) + header_space) * image_multiplier)
         ax_height = int(((image_height - (image_margin*2) - header_space - footer_space) / analysis_sections) * analysis_section_height) * image_multiplier
@@ -498,16 +511,18 @@ def create_analysis1_subplot(fig, gs, image_margin, header_space, footer_space, 
         ax.set_ylim(0, ax_height)
         ax.axis('off')
         test_text = None
-        ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#ffffff', test_text, '#000000', 1, 2, 100)
-        top_pos_x = 1*image_multiplier  # Center horizontally
-        top_pos_y = ((ax_height-(1*image_multiplier)))  # Adjust vertical position
-        ft_size = 18
-        for x in analysis_set:
-                ax.text(top_pos_x, top_pos_y, x, color='black', ha='left', va='top', fontsize=ft_size)
-                top_pos_y = top_pos_y - (6*image_multiplier)  # Adjust spacing between lines
+#        ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
+#                         image_multiplier, '#ffffff', '#ffffff', test_text, '#000000', 1, 2, 100)
+        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, image_multiplier, '#ffffff', '#000000', analysis_set, '#000000', fl_div, 1, 50, True)
+
+#        top_pos_x = 1*image_multiplier  # Center horizontally
+#        top_pos_y = ((ax_height-(1*image_multiplier)))  # Adjust vertical position
+#        ft_size = 18
+#        for x in analysis_set:
+#                ax.text(top_pos_x, top_pos_y, x, color='black', ha='left', va='top', fontsize=ft_size)
+#                top_pos_y = top_pos_y - (6*image_multiplier)  # Adjust spacing between lines
         return(fig)
-def create_analysis2_subplot(fig, gs, image_margin, header_space, footer_space, image_length, 
+def zzzcreate_analysis2_subplot(fig, gs, image_margin, header_space, footer_space, image_length, 
                              image_height, image_multiplier, analysis_sections, analysis_section_start, analysis_section_height, analysis_set):
         ax_upper_x = (image_length - (int(((image_length)/4)))) * image_multiplier
         ax_upper_y = ax_height = int(((image_height - (image_margin*2) - header_space - footer_space) / analysis_sections) * analysis_section_start) * image_multiplier
@@ -531,7 +546,7 @@ def create_analysis2_subplot(fig, gs, image_margin, header_space, footer_space, 
                 ax.text(top_pos_x, top_pos_y, x, color='black', ha='left', va='top', fontsize=ft_size)
                 top_pos_y = top_pos_y - (4*image_multiplier)  # Adjust spacing between lines
         return(fig)
-def create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, image_length, 
+def zzzcreate_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, image_length, 
                              image_height, image_multiplier, analysis_sections, analysis_section_start, analysis_section_height, analysis_set):
         ax_upper_x = (image_length - (int(((image_length)/4)))) * image_multiplier
         ax_upper_y = ax_height = int(((image_height - (image_margin*2) - header_space - footer_space) / analysis_sections) * analysis_section_start) * image_multiplier
@@ -598,10 +613,7 @@ def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div):
                                 for r in rsa:
                                         sa_analysis_number, sa_analysis_title, sa_analysis_value = get_stand_analysis(r.sa_stand, None, r.sa_analysis_title)
                                         new_stand.append([str(sa_analysis_title)+": "+str(sa_analysis_value), 'left', 'top'])
-#
-#                                new_stand.append(['Price: $20000', 'left', 'top'])
-#                                new_stand.append(['Target: $30000', 'left', 'top'])
-                        ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50)
+                        ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50, True, 0.4)
         return ax
 
 def new_place_header(fig, gs, image_margin, header_space, image_length, image_height, image_multiplier, header_set, footer_space):
@@ -619,7 +631,7 @@ def new_place_header(fig, gs, image_margin, header_space, image_length, image_he
         ax.axis('off')
         test_text = None
         ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#ffffff', header_set, '#000000', 1, 3, 300)
+                         image_multiplier, '#ffffff', '#ffffff', header_set, '#000000', 1, 3, 300, True, 0.3)
         return(fig)
 def new_place_footer(fig, gs, image_margin, footer_space, image_length, image_height, image_multiplier, footer_set):
         ax_height = int(footer_space * image_multiplier) 
@@ -636,8 +648,35 @@ def new_place_footer(fig, gs, image_margin, footer_space, image_length, image_he
         ax.axis('off')
         test_text = None
         ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#ffffff', footer_set, '#000000', 1, 3, 300)
+                         image_multiplier, '#ffffff', '#ffffff', footer_set, '#000000', 1, 3, 300, True, 0.3)
         return(fig)
+
+
+def create_sold_info_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, 
+                             image_multiplier, analysis_sections, analysis_section_height, upper, analysis_set):
+ 
+        potential_plot_height = (image_height - (image_margin*2) - header_space - footer_space)
+
+        ax_upper_x = int((image_length - (int(((image_length)/4))) - image_margin) * image_multiplier)
+        ax_height = int((potential_plot_height / 2) * image_multiplier)
+        ax_width = int((((image_length)-(image_margin*2))/4) * image_multiplier)
+
+        if(upper):
+                ax_upper_y = int((image_margin + header_space) * image_multiplier)
+        else:
+                ax_upper_y = int((image_margin+header_space+(potential_plot_height/2)) * image_multiplier)
+        fl_div = 1.0
+ 
+        ax = fig.add_subplot(gs[ax_upper_y:ax_upper_y+ax_height, ax_upper_x:ax_upper_x+ax_width])  # Use the entire grid for the main plot
+#        print_ax_size(fig, gs, ax, "create_analysis1_subplot")
+
+#        # Set the limits of the plot
+        ax.set_xlim(0, ax_width)
+        ax.set_ylim(0, ax_height)
+        ax.axis('off')
+        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, image_multiplier, '#ffffff', '#000000', analysis_set, '#000000', fl_div, 1, 50, False, 0.2)
+        return(fig)
+
 
 def floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floorplan_length, floorplan_height):
         potential_plot_height = (image_height - (image_margin*2) - header_space - footer_space) * image_multiplier
@@ -661,7 +700,7 @@ def floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_l
         ax.axis('off')
         test_text = None
         ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#000000', None, '#000000', 1, 3, 100)
+                         image_multiplier, '#ffffff', '#000000', None, '#000000', 1, 3, 100, True, 0.4)
 
         ax = floorplan_new_place_stands(fig, ax, image_multiplier, fl_div)
         return(fig)
@@ -687,14 +726,24 @@ def render_floorplan(rxe, header_set, footer_set, message_set, image_multiplier,
         fig = create_outer_square(fig, gs, plt_length, plt_height, image_multiplier) 
         fig = new_place_footer(fig, gs, image_margin, footer_space, image_length, image_height, image_multiplier, footer_set)
         fig = new_place_header(fig, gs, image_margin, header_space, image_length, image_height, image_multiplier, header_set, footer_space)
-        fig = floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floor_length, floor_height)
 
-#        fig = create_analysis1_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 3, analysis_set_1)
+        if(floorplan_type in ('Initial', 'Final')):
+                fig = floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floor_length, floor_height)
+        else:
+                fig = floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length*.70, image_height, image_multiplier, floor_length, floor_height)
+                analysis_set_1 = []
+                analysis_set_1.append(["FINAL VIEW", 'center', 'top'])
+                analysis_set_1.append(["blah", 'left', 'top'])
+                analysis_set_1.append(["blah", 'left', 'top'])
+                upper = True
+                fig = create_sold_info_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 4, 2, upper, analysis_set_1)
+                upper = False
+                fig = create_sold_info_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 3, upper, analysis_set_1)
 #        fig = create_analysis2_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 3, 1, analysis_set_1)
 #        fig = create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 4, 1, analysis_set_1)
 
         pyplot_filename, pyplot_path = write_pyplot_to_file(plt, static_floorplan_loc, cdatetime)
-        pyplot_filename = pyplot_filename + '.png'
+        plt.close(fig)
 
         record_log_data("aaa_helper_functions.py", "run_event_year", "completed: event name: " + str(rxe.re_name))
         return pyplot_filename
