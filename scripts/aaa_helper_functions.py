@@ -409,7 +409,6 @@ def new_place_circle(sq, x, y, xlen, ylen, fill_color, edge_color, fl_div, line_
     sq.add_patch(circle)
 
     return sq
-
 def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width, max_text_size, text_bottom_up, top_section_percent):
         rect = patches.Rectangle((x*fl_div, y*fl_div), xlen*fl_div, ylen*fl_div, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
         sq.add_patch(rect)
@@ -511,9 +510,7 @@ def zzzcreate_analysis1_subplot(fig, gs, image_margin, header_space, footer_spac
         ax.set_ylim(0, ax_height)
         ax.axis('off')
         test_text = None
-#        ax = new_place_rectangle(ax, 0, 0, ax_width, ax_height, 
-#                         image_multiplier, '#ffffff', '#ffffff', test_text, '#000000', 1, 2, 100)
-        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, image_multiplier, '#ffffff', '#000000', analysis_set, '#000000', fl_div, 1, 50, True)
+#        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, image_multiplier, '#ffffff', '#000000', analysis_set, '#000000', fl_div, 1, 50, True)
 
 #        top_pos_x = 1*image_multiplier  # Center horizontally
 #        top_pos_y = ((ax_height-(1*image_multiplier)))  # Adjust vertical position
@@ -704,7 +701,6 @@ def floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_l
 
         ax = floorplan_new_place_stands(fig, ax, image_multiplier, fl_div)
         return(fig)
-
 def render_floorplan(rxe, header_set, footer_set, message_set, image_multiplier, floorplan_type):
         record_log_data("aaa_helper_functions.py", "run_event_year", "starting: event name: " + str(rxe.re_name))
 
