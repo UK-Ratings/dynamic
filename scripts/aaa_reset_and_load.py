@@ -14,7 +14,8 @@ import datetime
 
 
 from base.models import *
-from scripts.aaa_helper_functions import *
+from scripts.helper_functions import *
+from scripts.helper_functions_render import *
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
@@ -185,6 +186,11 @@ def load_transaction_sales_data(rxe, filename):
                 if not isinstance(row['Order Created Date'], NaTType) and row['Recipient Country'] is not None and len(row['Recipient Country']) > 0:
                         last_modified_date = timezone.make_aware(row['Last Modified Date']) if pd.notnull(row['Last Modified Date']) else None
                         order_created_date = timezone.make_aware(row['Order Created Date']) if pd.notnull(row['Order Created Date']) else None
+                        if(str(row['Stand Zone'])[0] == ","):
+                                szr = str(row['Stand Zone'])[1:]
+                        else:
+                                szr = str(row['Stand Zone'])
+                        szr = szr.strip()
 
                         up, create = event_sales_transactions.objects.update_or_create(
                                 est_event=rxe,
@@ -196,7 +202,7 @@ def load_transaction_sales_data(rxe, filename):
                                 est_Stand_Name_Length_Width=row['Stand Name (Length * Width)'],
                                 est_Stand_Area=row['Stand Area'],
                                 est_Number_of_Corners=row['Number of Corners'],
-                                est_Stand_Zone=row['Stand Zone'],
+                                est_Stand_Zone=szr,#row['Stand Zone'],
                                 est_Floor_Plan_Sector=row['Floor Plan Sector'],
                                 est_Sharer_Entitlements=row['Sharer Entitlements'],
                                 est_Last_Modified_Date=last_modified_date,
@@ -218,10 +224,35 @@ def load_transaction_sales_data(rxe, filename):
 #        for x in event_sales_transactions.objects.filter(est_event=rxe, est_Company_Name=cn):
         for x in event_sales_transactions.objects.filter(est_event=rxe):
                 snlw = x.est_Stand_Name_Length_Width.split(", ")
+                noc = x.est_Number_of_Corners.split(",")
+                sz = x.est_Stand_Zone.split(",")
+                fps = x.est_Floor_Plan_Sector.split(",")
+                if(len(fps) > 1):
+                        for qq in snlw:
+                                print(qq)
+                        for qq in noc:
+                                print(qq)
+                        for qq in sz:
+                                print("sz", qq, "----", x.est_Stand_Zone)
+                        for qq in fps:
+                                print("fps", qq, "----", x.est_Floor_Plan_Sector)
                 if(len(snlw) > 0):
+                        noc_cnt = 0
                         first = True
 #                        print("snlw: ", x.est_Stand_Name_Length_Width, snlw )
                         for y in snlw:
+                                try:
+                                        noc_val = noc[noc_cnt]
+                                except:
+                                        noc_val = 0
+                                try:
+                                        sz_val = sz[noc_cnt].strip()
+                                except:
+                                       sz_val = sz[0].strip()
+                                try:
+                                        fps_val = fps[noc_cnt].strip()
+                                except:
+                                       fps_val = fps[0].strip()
                                 first_space_index = y.find(" ")
                                 if first_space_index != -1:
                                         st_name = y[:first_space_index].strip()
@@ -230,6 +261,9 @@ def load_transaction_sales_data(rxe, filename):
                                         if first:
                                                 x.est_Stand_Name_Cleaned = st_name
                                                 x.est_Stand_Name_Dim_Cleaned = st_dim
+                                                x.est_Number_of_Corners = noc_val
+                                                x.est_Stand_Zone = sz_val
+                                                x.est_Floor_Plan_Sector = fps_val
                                                 x.save()
                                                 first = False
                                         else:
@@ -242,9 +276,9 @@ def load_transaction_sales_data(rxe, filename):
                                                         est_Opportunity_Owner=x.est_Opportunity_Owner,
                                                         est_Stand_Name_Length_Width=x.est_Stand_Name_Length_Width,
                                                         est_Stand_Area=x.est_Stand_Area,
-                                                        est_Number_of_Corners=x.est_Number_of_Corners,
-                                                        est_Stand_Zone=x.est_Stand_Zone,
-                                                        est_Floor_Plan_Sector=x.est_Floor_Plan_Sector,
+                                                        est_Number_of_Corners=noc_val,#x.est_Number_of_Corners,
+                                                        est_Stand_Zone=sz_val,#x.est_Stand_Zone,
+                                                        est_Floor_Plan_Sector=fps_val,#x.est_Floor_Plan_Sector,
                                                         est_Sharer_Entitlements=x.est_Sharer_Entitlements,
                                                         est_Last_Modified_Date=x.est_Last_Modified_Date,
                                                         est_Total_Net_Amount=0,
@@ -253,7 +287,7 @@ def load_transaction_sales_data(rxe, filename):
                                                         est_Product_Name=x.est_Product_Name,
                                                         est_Stand_Name_Cleaned=st_name,
                                                         est_Stand_Name_Dim_Cleaned=st_dim)
-
+                                noc_cnt = noc_cnt + 1
         if(1==0):
                 for x in event_sales_transactions.objects.filter(est_event=rxe, est_Company_Name=cn):
 #                for x in event_sales_transactions.objects.filter(est_event=rxe):

@@ -19,7 +19,7 @@ import cv2
 from base.models import *
 from users.models import *
 
-from scripts.aaa_helper_functions import * 
+from scripts.helper_functions import * 
 from scripts.aaa_reset_and_load import *
 from scripts import aaa_run_process
 

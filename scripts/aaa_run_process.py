@@ -23,8 +23,10 @@ from dateutil.relativedelta import relativedelta
 
 
 from scripts import aaa_reset_and_load
-from scripts.aaa_helper_functions import *
-from scripts.aaa_stand_analysis import *
+from scripts.helper_functions import *
+from scripts.helper_functions_render import *
+from scripts.stand_analysis import *
+from scripts.event_analysis import *
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
@@ -55,21 +57,70 @@ def build_stand_counts_as_string(rxe, ev_date):
                         + str(es.escby_y_length) + ": " + str(es.escby_stand_count) + "; ")
     return output_string
 
+def build_sale_analysis(sales_t, st_info, run_id):
+        analysis_set = []
 
-def run_event_year(event_name, create_images):
+        analysis_set.append(["Stand: "+str(sales_t.est_Stand_Name_Cleaned) + "-" , 'center', 'top'])
+        analysis_set.append(["Company Name: " + str(sales_t.est_Company_Name), 'left', 'top'])
+        analysis_set.append(["Origin Country: " + str(sales_t.est_Recipient_Country), 'left', 'top'])
+        analysis_set.append(["Customer Type: " + str(sales_t.est_Customer_Type), 'left', 'top'])
+        analysis_set.append(["Opportunity Type: " + str(sales_t.est_Opportunity_Type), 'left', 'top'])
+        analysis_set.append(["Opportunity Owner: " + str(sales_t.est_Opportunity_Owner), 'left', 'top'])
+        analysis_set.append([str(sales_t.est_Stand_Name_Length_Width), 'left', 'top'])
+        analysis_set.append(["Stand Name: " + str(sales_t.est_Stand_Name_Cleaned), 'left', 'top'])
+        analysis_set.append(["Stand Dimenstions: " + str(sales_t.est_Stand_Name_Dim_Cleaned), 'left', 'top'])
+        analysis_set.append(["Stand Area: " + str(sales_t.est_Stand_Area), 'left', 'top'])
+        analysis_set.append(["Stand Corners: " + str(sales_t.est_Number_of_Corners), 'left', 'top'])
+        analysis_set.append(["Stand Zone: " + str(sales_t.est_Stand_Zone), 'left', 'top'])
+        analysis_set.append(["Stand Sector: " + str(sales_t.est_Floor_Plan_Sector), 'left', 'top'])
+        analysis_set.append(["Stand Sharer Entitlements: " + str(sales_t.est_Sharer_Entitlements), 'left', 'top'])
+        analysis_set.append(["Stand Sharer Companies: " + str(sales_t.est_Sharer_Companies), 'left', 'top'])
+        analysis_set.append(["Modified Date: " + str(sales_t.est_Last_Modified_Date), 'left', 'top'])
+        analysis_set.append(["Total Net Amount: " + str(sales_t.est_Total_Net_Amount), 'left', 'top'])
+        analysis_set.append(["Order Created Date: " + str(sales_t.est_Order_Created_Date), 'left', 'top'])
+        analysis_set.append(["Packages Sold: " + str(sales_t.est_Packages_Sold), 'left', 'top'])
+
+        analysis_set.append(["Products Sold", 'left', 'top'])
+        p_name = sales_t.est_Product_Name.split(",")
+        for q in p_name:
+                analysis_set.append(["   " + str(q), 'left', 'top'])
+
+        mc = False
+        stand_analysis_recs = stand_get_all_analysis_records(st_info, run_id)
+        if(len(stand_analysis_recs) == 0):
+                stand_analysis_price_apply_monte_carlo(sales_t, st_info, run_id)
+                stand_analysis_recs = stand_get_all_analysis_records(st_info, run_id)
+                mc = True
+
+        if(len(stand_analysis_recs) > 0):
+                analysis_set.append([" ", 'left', 'top'])
+                if(mc):
+                        analysis_set.append(["Monte Carlo Stand Analysis", 'left', 'top'])
+                else:
+                        analysis_set.append(["Stand Analysis", 'left', 'top'])
+                analysis_set.append([" ", 'left', 'top'])
+                for q in stand_analysis_recs:
+                        if(q[1] == 'MC Rules Applied'):
+                                cut_it = q[2].split(",")
+                                analysis_set.append([" ", 'left', 'top'])
+                                analysis_set.append(["Monte Carlo Rules Applied", 'left', 'top'])
+                                for q2 in cut_it:
+                                        analysis_set.append([str(q2), 'left', 'top'])
+                        else:
+                                analysis_set.append([str(q[1]+": "+str(q[2])), 'left', 'top'])
+        return(analysis_set)
+
+def run_event_year(rxe, create_images):
         record_log_data("aaa_run_process.py", "run_event_year", "starting...")
 
-        try:
-                rxe = rx_event.objects.get(re_name=event_name)
-        except rx_event.DoesNotExist:
-                record_log_data("aaa_run_process.py", "run_event_year", "Event does not exist: " + event_name)
-                return
+        run_id = 0
+        stand_analysis_price(rxe, run_id)
+        build_stand_gradient(rxe, run_id)
 
         st_date = rxe.re_event_start_date - relativedelta(days=365+90)
         ev_date = st_date
         end_date = rxe.re_event_end_date#timezone.make_aware(datetime(2024, 3, 30, 0, 0, 0, 0))
         image_length, image_height, image_margin, header_space, footer_space, image_multiplier, image_multiplier_small, static_floorplan_loc, static_analysis_loc = get_env_values()
-        erase_files_in_dir(static_floorplan_loc)
 
         header_set = []
         header_set.append([rxe.re_name, 'center', 'top'])
@@ -77,14 +128,16 @@ def run_event_year(event_name, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
         to_do = 0
-        while ev_date <= end_date and to_do < 3:
+        while ev_date <= end_date and to_do < 399999999:
 #        if (1 == 0):
                 if(ev_date == st_date):
+                        analysis_set_top = []
+                        analysis_set_bottom = []
                         footer_set = []
                         message_set = []
-                        footer_set.append(["INITAL VIEW", 'center', 'top'])
-                        footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
-                        render_floorplan(rxe, header_set, footer_set, message_set, image_multiplier, "Initial")
+                        footer_set.append(["AS SOLD: INITAL VIEW", 'center', 'top'])
+#                        footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
+                        render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", run_id)
                 else:
                         for x in event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)):
                                 print(f"event_sales_transactions: {x.est_Order_Created_Date} {x.est_Stand_Name_Cleaned} {x.est_Company_Name}")
@@ -98,11 +151,12 @@ def run_event_year(event_name, create_images):
                                         if(create_images == True):
                                                 footer_set = []
                                                 message_set = []
-                                                footer_set.append(["EVENT: Stand Sale: " + str(x.est_Company_Name) + " at: "+str(x.est_Stand_Name_Cleaned) + " on: "+str(ev_date), 'center', 'top'])
-                                                footer_set.append(["Las Vegas, NV", 'left', 'top'])
-                                                footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
+                                                analysis_set_top = build_sale_analysis(x, fs, run_id)
+                                                analysis_set_bottom = []  ###WILL USE MC RUN ID HERE
+                                                footer_set.append(["EVENT: Stand Sale: " + str(x.est_Company_Name) + " at: "+str(x.est_Stand_Name_Cleaned) + " on "+str(ev_date.strftime("%d %b %Y")), 'center', 'top'])
+                                                footer_set.append(['Darker Green higher Price from Average.  Darker Red lower Price from Average','left', 'top'])
                                                 if(create_images):
-                                                        render_floorplan(rxe, header_set, footer_set, message_set, image_multiplier_small, "NA")
+                                                        render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier_small, "NA", run_id)
                                         fs.s_stand_status = 'Sold'
                                         fs.save()
 #                                        build_stand_counts_by_date(rxe, ev_date)
@@ -110,13 +164,72 @@ def run_event_year(event_name, create_images):
                 ev_date = ev_date + relativedelta(days=1)
         footer_set = []
         message_set = []
-        footer_set.append(["FINAL VIEW", 'center', 'top'])
-        footer_set.append(["blah, blah, blah", 'left', 'top'])
-        footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
-        render_floorplan(rxe, header_set, footer_set, message_set, image_multiplier, "Final")
+        analysis_set_top = []
+        analysis_set_bottom = []
+        footer_set.append(["AS SOLD: FINAL VIEW", 'center', 'top'])
+        footer_set.append(['Darker Green higher Price from Average.  Darker Red lower Price from Average','left', 'top'])
+        render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Final", run_id)
 
         record_log_data("aaa_run_process.py", "run_event_year", "completed...")
 
+
+def run_event_monte_carlo_simulation(rxe, p_number, create_images):
+        record_log_data("aaa_run_process.py", "run_event_monte_carlo_simulation", "starting...")
+
+        st_date = rxe.re_event_start_date - relativedelta(days=365+90)
+        ev_date = st_date
+        end_date = rxe.re_event_end_date#timezone.make_aware(datetime(2024, 3, 30, 0, 0, 0, 0))
+        image_length, image_height, image_margin, header_space, footer_space, image_multiplier, image_multiplier_small, static_floorplan_loc, static_analysis_loc = get_env_values()
+
+        header_set = []
+        header_set.append([rxe.re_name, 'center', 'top'])
+        header_set.append(["Monte Carlo Simulation Cycle " + str(p_number) + " Start", 'center', 'top'])
+        header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
+
+        to_do = 0
+        while ev_date <= end_date and to_do < 3999999:
+#        if (1 == 0):
+                if(ev_date == st_date):
+                        analysis_set_top = []
+                        analysis_set_bottom = []
+                        footer_set = []
+                        message_set = []
+                        footer_set.append(["AS SOLD: INITAL VIEW", 'center', 'top'])
+#                        footer_set.append([build_stand_counts_as_string(rxe, ev_date), 'left', 'top'])
+                        render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", p_number)
+                else:
+                        for x in event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)):
+                                print(f"event_sales_transactions: {x.est_Order_Created_Date} {x.est_Stand_Name_Cleaned} {x.est_Company_Name}")
+                                record_log_data("aaa_run_process.py", "run_event_year", "working date: " + str(ev_date))
+                                for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
+#                                        s_stand_status = Available, Sold, New Sell, Reserved, New Stand
+#                                        s_stand_price = Base, Price Increase, Price Decrease 
+                                        fs.s_stand_status = 'New Sell'
+                                        fs.save()
+
+                                        analysis_set_top = build_sale_analysis(x, fs, p_number)
+
+                                        if(create_images == True):
+                                                footer_set = []
+                                                message_set = []
+                                                analysis_set_bottom = []  ###WILL USE MC RUN ID HERE
+                                                footer_set.append(["EVENT: Stand Sale: " + str(x.est_Company_Name) + " at: "+str(x.est_Stand_Name_Cleaned) + " on "+str(ev_date.strftime("%d %b %Y")), 'center', 'top'])
+                                                footer_set.append(['Darker Green higher Price from Average.  Darker Red lower Price from Average','left', 'top'])
+                                                if(create_images):
+                                                        render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier_small, "NA", p_number)
+                                        fs.s_stand_status = 'Sold'
+                                        fs.save()
+#                                        build_stand_counts_by_date(rxe, ev_date)
+                                to_do = to_do + 1
+                ev_date = ev_date + relativedelta(days=1)
+        footer_set = []
+        message_set = []
+        analysis_set_top = []
+        analysis_set_bottom = []
+        footer_set.append(["Monte Carlo Simulation Cycle " + str(p_number) + " Final", 'left', 'top'])
+        render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Final", p_number)
+
+        record_log_data("aaa_run_process.py", "run_event_monte_carlo_simulation", "completed...")
 
 def run(*args):
 
@@ -126,6 +239,9 @@ def run(*args):
         path_input = os.path.join(settings.BASE_DIR, "scripts/")
 
         logs_filename = path_logs+"_"+os.path.splitext(os.path.basename(__file__))[0] + ".txt"
+
+        image_length, image_height, image_margin, header_space, footer_space, image_multiplier, image_multiplier_small, static_floorplan_loc, static_analysis_loc = get_env_values()
+        erase_files_in_dir(static_floorplan_loc)
 
         for x in stands.objects.all():
                 stand_analysis.objects.filter(sa_stand=x).delete()
@@ -138,11 +254,35 @@ def run(*args):
 #        aaa_reset_and_load.run()
         record_log_data("aaa_run_process.py", "run", "completed... load data")
 
-        stand_analysis_price('ISC West 2025')
-        build_stand_gradient('ISC West 2025')
+        event_name = "ISC West 2025"
+        rx_event = get_event(event_name)
+
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-        run_event_year('ISC West 2025', True)
+        run_event_year(rx_event, False)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
+
+
+        if(rx_event is not None):
+                pricing_rules.objects.filter(prb_event = rx_event).delete()
+                load_pr(rx_event)
+
+#                recs = pricing_rules_get_all_data(rx_event, 0)
+#                for q in recs:
+#                        print(q)
+
+                for r in range(1, 2):
+                        print("Pricing Rule Base: " + str(r))
+                        pricing_copy_base(rx_event, r)
+#                        recs = pricing_rules_get_all_data(rx_event, r)
+#                        for q in recs:
+#                                print(q)
+                        run_event_monte_carlo_simulation(rx_event, r, False)
+
+#        stand_analysis_price(event_name)
+#        build_stand_gradient('ISC West 2025')
+#        record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
+#        run_event_year(rx_event, False)
+#        record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
 #        create_mov_from_images('floorplans', 'output.mp4')
 

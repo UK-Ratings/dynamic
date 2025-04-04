@@ -118,6 +118,7 @@ class stand_location(models.Model):
 
 class stand_analysis(models.Model):
     sa_stand = models.ForeignKey(stands, blank=True, null=True, on_delete=models.CASCADE)
+    sa_run_id = models.IntegerField("monte carlo run id", blank=True, null=True)
     sa_analysis_number = models.IntegerField("analysis number")
     sa_analysis_title = models.CharField("analysis title", max_length=300, blank=True, null=True, )
     sa_analysis_value = models.CharField("analysis value", max_length=300, blank=True, null=True, )
@@ -125,7 +126,23 @@ class stand_analysis(models.Model):
     sa_analysis_datetime = models.DateTimeField("analysis datetime", blank=True, null=True)
     class Meta:
         indexes = [
-            models.Index(fields=['sa_stand', 'sa_analysis_number'], name='stand_analysis_index1'),
-            models.Index(fields=['sa_stand', 'sa_analysis_title'], name='stand_analysis_index2'),
+            models.Index(fields=['sa_stand', 'sa_run_id','sa_analysis_number'], name='stand_analysis_index1'),
+            models.Index(fields=['sa_stand', 'sa_run_id', 'sa_analysis_title'], name='stand_analysis_index2'),
+        ]
+
+
+class pricing_rules(models.Model):
+    prb_event = models.ForeignKey(rx_event, blank=True, null=True, on_delete=models.CASCADE)
+    prb_run_id = models.IntegerField("monto carlo run id", blank=True, null=True)
+    prb_number = models.IntegerField("pricing rule base number")
+    prb_title = models.CharField("pricing rule base title", max_length=300, blank=True, null=True, )    
+    prb_value = models.CharField("pricing rule base value", max_length=300, blank=True, null=True, )
+    prb_type = models.CharField("pricing rule base type", max_length=50, blank=True, null=True, )
+    prb_start_datetime = models.DateTimeField("pricing rule base start datetime", blank=True, null=True)
+    prb_end_datetime = models.DateTimeField("pricing rule base end datetime", blank=True, null=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=['prb_event', 'prb_run_id','prb_number'], name='prb_index1'),
+            models.Index(fields=['prb_event', 'prb_run_id','prb_title'], name='prb_index2'),
         ]
 
