@@ -195,7 +195,7 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
                                                 footer_set.append(['Darker Green higher Price from Average.  Darker Red lower Price from Average','left', 'top'])
                                                 if(create_images):
                                                         render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier_small, "NA", p_number)
-                                        stand_attributes_record(fs, None, 'Stand Status', 'New Sell', 'string', timezone.now())
+                                        stand_attributes_record(fs, None, 'Stand Status', 'Sold', 'string', timezone.now())
                                         fs.s_stand_status = 'Sold'
                                         fs.save()
 #                                        build_stand_counts_by_date(rxe, ev_date)

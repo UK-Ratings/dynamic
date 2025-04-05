@@ -387,62 +387,55 @@ def zzzcreate_analysis3_subplot(fig, gs, image_margin, header_space, footer_spac
                 top_pos_y = top_pos_y - (4*image_multiplier)  # Adjust spacing between lines
         return(fig)
 
-def floorplan_new_place_stands(rxe, fig, ax, image_multiplier, fl_div, run_id):
-        for st in stands.objects.filter(s_rx_event=rxe):
-                sl_x = stand_attributes_get_value(st, None, 'Stand x')
-                sl_y = stand_attributes_get_value(st, None, 'Stand y')
-                sl_x_length = stand_attributes_get_value(st, None, 'Stand x length')
-                sl_y_length = stand_attributes_get_value(st, None, 'Stand y length')
-#        for x in stand_location.objects.filter(sl_stand__s_rx_event__re_name__iexact='ISC West 2025'):
+def floorplan_new_place_stands(fig, ax, image_multiplier, fl_div, run_id):
+        for x in stand_location.objects.filter(sl_stand__s_rx_event__re_name__iexact='ISC West 2025'):
                 #Available, Sold, New Sell, Reserved, New Stand
-                sa_analysis_number, sa_analysis_title, spg = stand_get_analysis_record(st, run_id, None, 'Sq Foot Gradient')
+                sa_analysis_number, sa_analysis_title, spg = stand_get_analysis_record(x.sl_stand, run_id, None, 'Sq Foot Gradient')
 #                print(f"sa_analysis_number: {sa_analysis_number}, sa_analysis_title: {sa_analysis_title}, spg: {spg}")
                 if(spg is None):
                         spg = 0
-                st_status = stand_attributes_get_value(st, None, 'Stand Status')
-                if(st_status == 'Available'):
+                if(x.sl_stand.s_stand_status == 'Available'):
                         stand_fill_color = get_color('unsold stand fill color')
                         stand_outline_color = get_color('unsold stand outline color')
                         text_color = get_color('unsold stand text color')
-                if(st_status == 'Sold'):
+                if(x.sl_stand.s_stand_status == 'Sold'):
                         stand_fill_color = get_gradient_color(spg)
                         stand_outline_color = get_gradient_color(spg)
                         text_color = get_color('sold stand text color')
-                if(st_status == 'New Sell'):
+                if(x.sl_stand.s_stand_status == 'New Sell'):
                         stand_fill_color = get_gradient_color(spg)
                         stand_outline_color = get_gradient_color(spg)
                         text_color = get_color('sold stand text color')
                         circle_fill_color = get_color('sold stand circle fill color')
                         circle_outline_color = get_color('sold stand circle outline color')
                         text_color = get_color('sold stand circle text color')
-                        ax = new_place_circle(ax, sl_x, sl_y, sl_x_length, sl_y_length, circle_fill_color, circle_outline_color, fl_div, 40)
+                        ax = new_place_circle(ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, circle_fill_color, circle_outline_color, fl_div, 40)
 
                 #Base, Price Increase, Price Decrease 
-                st_price = stand_attributes_get_value(st, None, 'Stand Price')
-                if(st_price == 'Price Increase'):
+                if(x.sl_stand.s_stand_price == 'Price Increase'):
                         stand_fill_color = get_color('price increase stand fill color')
                         stand_outline_color = get_color('price increase stand outline color')
                         text_color = get_color('price increase stand text color')
-                if(st_price == 'Price Decrease'):
+                if(x.sl_stand.s_stand_price == 'Price Decrease'):
                         stand_fill_color = get_color('price decrease stand fill color')
                         stand_outline_color = get_color('price decrease stand outline color')
                         text_color = get_color('price decrease stand text color')
 
-                if(sl_x_length * sl_y_length > 1):
+                if(x.sl_x_length * x.sl_y_length > 1):
                         new_stand = []
-                        if(st_status in ('Sold', 'New Sell')):
-                                if(st.s_name is not None and len(st.s_name) > 0):
-                                        new_stand.append([str(st.s_name), 'center', 'top'])
+                        if(x.sl_stand.s_stand_status in ('Sold', 'New Sell')):
+                                if(x.sl_stand.s_name is not None and len(x.sl_stand.s_name) > 0):
+                                        new_stand.append([str(x.sl_stand.s_name), 'center', 'top'])
                                 else:
                                         new_stand.append(['No Name Given', 'center', 'top'])
 #                                rsa = stand_analysis.objects.filter(sa_stand=x.sl_stand).order_by('sa_analysis_number')
-                                rsa = stand_get_all_analysis_records(st, run_id)
+                                rsa = stand_get_all_analysis_records(x.sl_stand, run_id)
                                 for r in rsa:
                                         if(r[1] != 'MC Rules Applied'):
 #                                        sa_analysis_number, sa_analysis_title, sa_analysis_value = stand_get_analysis_record(r.sa_stand, run_id, None, r.sa_analysis_title)
 #                                        new_stand.append([str(sa_analysis_title)+": "+str(sa_analysis_value), 'left', 'top'])
                                                 new_stand.append([str(r[1])+": "+str(r[2]), 'left', 'top'])
-                        ax = new_place_rectangle(fig, ax, sl_x, sl_y, sl_x_length, sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50, True, 0.4)
+                        ax = new_place_rectangle(fig, ax, x.sl_x, x.sl_y, x.sl_x_length, x.sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50, True, 0.4)
         return ax
 
 def new_place_header(fig, gs, image_margin, header_space, image_length, image_height, image_multiplier, header_set, footer_space):
@@ -511,7 +504,7 @@ def create_sold_info_subplot(fig, gs, image_margin, header_space, footer_space, 
         ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, image_multiplier, '#ffffff', '#000000', analysis_set, '#000000', fl_div, 1, 50, False, 0.2)
         return(fig)
 
-def floorplan_subplot(rxe, fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floorplan_length, floorplan_height, run_id):
+def floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floorplan_length, floorplan_height, run_id):
         potential_plot_height = (image_height - (image_margin*2) - header_space - footer_space) * image_multiplier
         potential_plot_length = (image_length - (image_margin*2)) * image_multiplier
         height_div = (potential_plot_height / floorplan_height)
@@ -535,7 +528,7 @@ def floorplan_subplot(rxe, fig, gs, image_margin, header_space, footer_space, im
         ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
                          image_multiplier, '#ffffff', '#000000', None, '#000000', 1, 3, 100, True, 0.4)
 
-        ax = floorplan_new_place_stands(rxe, fig, ax, image_multiplier, fl_div, run_id)
+        ax = floorplan_new_place_stands(fig, ax, image_multiplier, fl_div, run_id)
         return(fig)
 def render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, floorplan_type, run_id):
         record_log_data("aaa_helper_functions.py", "run_event_year", "starting: event name: " + str(rxe.re_name))
@@ -560,9 +553,9 @@ def render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top,
         fig = new_place_header(fig, gs, image_margin, header_space, image_length, image_height, image_multiplier, header_set, footer_space)
 
         if(floorplan_type in ('Initial', 'Final') or (len(analysis_set_top) == 0 and len(analysis_set_bottom) == 0)):
-                fig = floorplan_subplot(rxe, fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floor_length, floor_height, run_id)
+                fig = floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floor_length, floor_height, run_id)
         else:
-                fig = floorplan_subplot(rxe, fig, gs, image_margin, header_space, footer_space, image_length*.70, image_height, image_multiplier, floor_length, floor_height, run_id)
+                fig = floorplan_subplot(fig, gs, image_margin, header_space, footer_space, image_length*.70, image_height, image_multiplier, floor_length, floor_height, run_id)
                 upper = True
                 fig = create_sold_info_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 4, 2, upper, analysis_set_top)
                 upper = False
