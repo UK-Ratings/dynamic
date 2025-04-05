@@ -32,7 +32,7 @@ from scripts.aaa_reset_and_load import load_stand_attribute_data
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
 
-def build_sale_analysis(sales_t, st_info, run_id):
+def zzzzbuild_sale_analysis(sales_t, st_info, run_id):
         analysis_set = []
 
         analysis_set.append(["Stand: "+str(sales_t.est_Stand_Name_Cleaned) + "-" , 'center', 'top'])
@@ -126,7 +126,7 @@ def run_event_year(rxe, create_images):
                                         if(create_images == True):
                                                 footer_set = []
                                                 message_set = []
-                                                analysis_set_top = build_sale_analysis(x, fs, run_id)
+                                                analysis_set_top = stand_build_sale_analysis(x, fs, run_id)
                                                 analysis_set_bottom = []  ###WILL USE MC RUN ID HERE
                                                 footer_set.append(["EVENT: Stand Sale: " + str(x.est_Company_Name) + " at: "+str(x.est_Stand_Name_Cleaned) + " on "+str(ev_date.strftime("%d %b %Y")), 'center', 'top'])
                                                 footer_set.append(['Darker Green higher Price from Average.  Darker Red lower Price from Average','left', 'top'])

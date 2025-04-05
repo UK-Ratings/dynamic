@@ -423,3 +423,62 @@ def build_stand_counts_as_string(rxe, ev_date):
                         + str(es.escby_y_length) + ": " + str(es.escby_stand_count) + "; ")
     return output_string
 
+def stand_build_sale_analysis(sales_t, st_info, run_id):
+        analysis_set = []
+
+        analysis_set.append(["Stand: "+str(sales_t.est_Stand_Name_Cleaned) + "-" , 'center', 'top'])
+        analysis_set.append(["Company Name: " + str(sales_t.est_Company_Name), 'left', 'top'])
+        analysis_set.append(["Origin Country: " + str(sales_t.est_Recipient_Country), 'left', 'top'])
+        analysis_set.append(["Customer Type: " + str(sales_t.est_Customer_Type), 'left', 'top'])
+        analysis_set.append(["Opportunity Type: " + str(sales_t.est_Opportunity_Type), 'left', 'top'])
+        analysis_set.append(["Opportunity Owner: " + str(sales_t.est_Opportunity_Owner), 'left', 'top'])
+        analysis_set.append([str(sales_t.est_Stand_Name_Length_Width), 'left', 'top'])
+        analysis_set.append(["Stand Name: " + str(sales_t.est_Stand_Name_Cleaned), 'left', 'top'])
+        analysis_set.append(["Stand Dimenstions: " + str(sales_t.est_Stand_Name_Dim_Cleaned), 'left', 'top'])
+        analysis_set.append(["Stand Area: " + str(sales_t.est_Stand_Area), 'left', 'top'])
+        analysis_set.append(["Stand Corners: " + str(sales_t.est_Number_of_Corners), 'left', 'top'])
+        analysis_set.append(["Stand Zone: " + str(sales_t.est_Stand_Zone), 'left', 'top'])
+        analysis_set.append(["Stand Sector: " + str(sales_t.est_Floor_Plan_Sector), 'left', 'top'])
+        analysis_set.append(["Stand Sharer Entitlements: " + str(sales_t.est_Sharer_Entitlements), 'left', 'top'])
+        analysis_set.append(["Stand Sharer Companies: " + str(sales_t.est_Sharer_Companies), 'left', 'top'])
+        analysis_set.append(["Modified Date: " + str(sales_t.est_Last_Modified_Date), 'left', 'top'])
+        analysis_set.append(["Total Net Amount: " + str(sales_t.est_Total_Net_Amount), 'left', 'top'])
+        analysis_set.append(["Order Created Date: " + str(sales_t.est_Order_Created_Date), 'left', 'top'])
+        analysis_set.append(["Packages Sold: " + str(sales_t.est_Packages_Sold), 'left', 'top'])
+
+        analysis_set.append(["Products Sold", 'left', 'top'])
+        p_name = sales_t.est_Product_Name.split(",")
+        for q in p_name:
+                analysis_set.append(["   " + str(q), 'left', 'top'])
+
+        stand_attributes_recs = stand_attributes_get_all_data(st_info)
+        analysis_set.append([" ", 'left', 'top'])
+        analysis_set.append(["Stand Attributes", 'left', 'top'])
+        for q in stand_attributes_recs:
+                analysis_set.append([str(q[1]+": "+str(q[2])), 'left', 'top'])
+        analysis_set.append([" ", 'left', 'top'])
+
+        mc = False
+        stand_analysis_recs = stand_get_all_analysis_records(st_info, run_id)
+        if(len(stand_analysis_recs) == 0):
+                stand_analysis_price_apply_monte_carlo(sales_t, st_info, run_id)
+                stand_analysis_recs = stand_get_all_analysis_records(st_info, run_id)
+                mc = True
+
+        if(len(stand_analysis_recs) > 0):
+                analysis_set.append([" ", 'left', 'top'])
+                if(mc):
+                        analysis_set.append(["Monte Carlo Stand Analysis", 'left', 'top'])
+                else:
+                        analysis_set.append(["Stand Analysis", 'left', 'top'])
+                analysis_set.append([" ", 'left', 'top'])
+                for q in stand_analysis_recs:
+                        if(q[1] == 'MC Rules Applied'):
+                                cut_it = q[2].split(",")
+                                analysis_set.append([" ", 'left', 'top'])
+                                analysis_set.append(["Monte Carlo Rules Applied", 'left', 'top'])
+                                for q2 in cut_it:
+                                        analysis_set.append([str(q2), 'left', 'top'])
+                        else:
+                                analysis_set.append([str(q[1]+": "+str(q[2])), 'left', 'top'])
+        return(analysis_set)
