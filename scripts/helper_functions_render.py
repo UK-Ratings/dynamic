@@ -20,9 +20,9 @@ from mpl_toolkits.axes_grid1.inset_locator import inset_axes
 import matplotlib.gridspec as gridspec
 import matplotlib.patches as patches
 
-from scripts.stand_analysis import stand_get_analysis_record
+from scripts.helper_functions_stand import stand_get_analysis_record
 from scripts.helper_functions import *
-from scripts.stand_analysis import *
+from scripts.helper_functions_stand import *
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 

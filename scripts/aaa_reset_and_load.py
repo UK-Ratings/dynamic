@@ -1,159 +1,28 @@
 #!/usr/bin/env python3
 
 from django.utils import timezone
-from django.contrib import messages
+#from django.contrib import messages
 import os
 from dotenv import load_dotenv
 from django.conf import settings
-from django.db.models import Max
-import numpy as np
+#from django.db.models import Max
+#import numpy as np
 import pandas as pd
 from pandas._libs.tslibs.nattype import NaTType
-import random
+#import random
 import datetime
 import csv
 
 from base.models import *
 from scripts.helper_functions import *
 from scripts.helper_functions_render import *
+from scripts.helper_functions_stand import *
+from scripts.helper_functions_event import *
 
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
 
-def stand_attributes_record(s_stand, s_number, s_title, s_value, s_type, s_datetime):
-#        print(f"stand_attribues_record {s_stand} {s_number} {s_title} {s_value} {s_type} {s_datetime}")
-        if(s_stand is not None) and ((s_number is not None) or (s_title is not None)):
-                if(s_number is not None):
-                        up, created = stand_attributes.objects.update_or_create(
-                                sa_stand=s_stand,
-                                sa_number=s_number,
-                                defaults={
-                                        'sa_title': s_title,
-                                        'sa_value': s_value,
-                                        'sa_type': s_type,
-                                        'sa_datetime': s_datetime
-                                })
-                else:
-                        max_number = stand_attributes.objects.filter(sa_stand = s_stand).aggregate(Max('sa_number'))
-                        if max_number['sa_number__max'] is None:
-                                s_number = 100
-                        else:
-                                s_number = int(max_number['sa_number__max']) + 10                
-                        if(s_title is not None):
-                                up, created = stand_attributes.objects.update_or_create(
-                                        sa_stand=s_stand,
-                                        sa_title=s_title,
-                                        defaults={
-                                                'sa_number': s_number,
-                                                'sa_value': s_value,
-                                                'sa_type': s_type,
-                                                'sa_datetime': s_datetime
-                                        })
-def stand_attributes_get(st_stand, st_number, st_title):
-        s_number = None
-        s_title = None
-        s_value = None
-        s_datetime = None
-        sa = None
-        if(st_stand is not None) and ((st_number is not None) or (st_title is not None)):
-                if(s_number is not None):
-                        try:
-                                sa = stand_attributes.objects.get(sa_stand=st_stand, sa_number=st_number)
-                        except stand_attributes.DoesNotExist:
-                                sa = None
-                if(sa is None) and (st_title is not None):
-                        try:
-                                sa = stand_attributes.objects.get(sa_stand=st_stand, sa_title=st_title)
-                        except stand_attributes.DoesNotExist:
-                                sa = None
-                if(sa is not None):
-                        s_number = sa.sa_number
-                        s_title = sa.sa_title
-                        s_datetime = sa.sa_datetime
-                        if(sa.sa_type == 'integer'):
-                                try:
-                                        s_value = int(sa.sa_value)
-                                except ValueError:
-                                        s_value = 0
-                        if(sa.sa_type == 'float'):
-                                try:
-                                        s_value = round(float(sa.sa_value),2)
-                                except ValueError:
-                                        s_value = 0.0
-                        if(sa.sa_type == 'string'):
-                                s_value = str(sa.sa_value)
-                        if(sa.sa_type == 'datetime'):
-                                s_value = timezone.datetime.strptime(sa.sa_value, "%Y-%m-%d %H:%M:%S.%f")
-                        if(sa.sa_type == 'boolean'):
-                                s_value = bool(sa.sa_value)
-                return s_number, s_title, s_value, s_datetime
-def stand_attributes_get_all_data(st_stand):
-        sa_data = []
-        sa_recs = stand_attributes.objects.filter(sa_stand=st_stand).order_by('sa_number')
-        for q in sa_recs:
-                s_number, s_title, s_value, s_datetime = stand_attributes_get(q.sa_stand, q.sa_number, q.sa_title) 
-                sa_data.append([s_number, s_title, s_value, s_datetime])
-        return sa_data
-
-
-def zzzload_sa(s_stand):
-#        stand_attributes_record(s_stand, None, 'Floor Plan Sector', str(timezone), 'datetime', timezone.now())
-
-#        pricing_rules_record(rxe, 0, None, 'Base Sq Price', '30.0', 'float', default_start_date, default_end_date)
-#        pricing_rules_record(rxe, 0, None, 'Corners: 1', '1', 'float', default_start_date, default_end_date)
-#        pricing_rules_record(rxe, 0, None, 'Stand Zone: Premium 1', '20', 'float', default_start_date, default_end_date)
-#        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: 3 Alarm', '1', 'float', default_start_date, default_end_date)
-
-        stand_attributes_record(s_stand, None, 'Base Sq Price', '30.0', 'float', timezone.now())
-        stand_attributes_record(s_stand, None, 'Corners', '1', 'integer', timezone.now())
-        stand_attributes_record(s_stand, None, 'Stand Zone', 'Premium 1', 'string', timezone.now())
-
-
-
-
-
-
-
-def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
-#        if(stand_number == "2123" or stand_name == "Verkada"):
-#                print("create_stand: ", stand_name, stand_number, x, y, x_length, y_length)
-        st, created = stands.objects.update_or_create(s_rx_event= eve, 
-                        s_name=stand_name,
-                        s_number=stand_number,
-                        defaults={
-                                's_stand_status':'Available', 
-                                's_stand_price':'Base',
-                                's_stand_price_gradient': random.randint(0, 100),})
-
-        sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
-                                'sl_x':x, 'sl_y':y, 'sl_x_length':x_length, 'sl_y_length':y_length})
-        stand_attributes_record(st, None, 'Stand x', str(x), 'float', timezone.now())
-        stand_attributes_record(st, None, 'Stand y', str(y), 'float', timezone.now())
-        stand_attributes_record(st, None, 'Stand x length', str(x_length), 'float', timezone.now())
-        stand_attributes_record(st, None, 'Stand y x', str(y_length), 'float', timezone.now())
-        stand_attributes_record(st, None, 'Stand Status', 'Available', 'string', timezone.now())
-        stand_attributes_record(st, None, 'Stand Price', 'Base', 'string', timezone.now())
-        stand_attributes_record(st, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
-
-def create_event_group(group_name):
-        try:
-                event_group = rx_event_group.objects.get(reg_name=group_name)
-        except rx_event_group.DoesNotExist:
-                event_group = rx_event_group.objects.create(reg_name=group_name)
-        return event_group
-def create_event(eg_name, ev_name, ev_start_date, ev_end_date):
-        egn = create_event_group(eg_name)
-        eve, create = rx_event.objects.update_or_create(re_event_group = egn, 
-                re_name=ev_name, defaults={
-                're_floor_length': 0, 're_floor_height': 0,
-                're_event_start_date': ev_start_date,
-                're_event_end_date': ev_end_date})
-        return eve
-def update_event_length_height(eve, fl_length, fl_height):
-        eve.re_floor_length = 1232#fl_length
-        eve.re_floor_height = 1052#fl_height
-        eve.save()
 def load_floorplan_data(rxe, filename, ratio_multiplier):
         file_path = os.path.join(settings.BASE_DIR, 'data', filename)
         if not os.path.exists(file_path):

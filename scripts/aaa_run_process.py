@@ -25,38 +25,12 @@ from dateutil.relativedelta import relativedelta
 from scripts import aaa_reset_and_load
 from scripts.helper_functions import *
 from scripts.helper_functions_render import *
-from scripts.stand_analysis import *
-from scripts.event_analysis import *
+from scripts.helper_functions_stand import *
+from scripts.helper_functions_event import *
 from scripts.aaa_reset_and_load import load_stand_attribute_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
-
-def build_stand_counts_by_date(rxe, ev_date):
-    event_stand_count_by_date.objects.filter(escby_rx_event=rxe, escby_date=ev_date).delete()
-    for s in stand_location.objects.filter(sl_stand__s_rx_event=rxe):
-#        print(ev_date, s.sl_stand.s_stand_status, s.sl_x_length, s.sl_y_length)
-        # Use get_or_create to fetch or create the object
-        obj, created = event_stand_count_by_date.objects.get_or_create(
-            escby_rx_event=rxe,
-            escby_date=ev_date,
-            escby_x_length=abs(s.sl_x_length),
-            escby_y_length=abs(s.sl_y_length),
-            escby_stand_status=s.sl_stand.s_stand_status,
-            defaults={'escby_stand_count': 1}  # Set initial count to 1 if created
-        )
-        # Increment the count if the object already exists
-        if not created:
-            obj.escby_stand_count += 1
-            obj.save()
-def build_stand_counts_as_string(rxe, ev_date):
-    output_string = ""
-    build_stand_counts_by_date(rxe, ev_date)
-    for es in event_stand_count_by_date.objects.filter(escby_rx_event=rxe, escby_date=ev_date
-                ).order_by('escby_stand_status', 'escby_x_length', 'escby_y_length'):
-        output_string = output_string + (str(es.escby_stand_status) + " " + str(es.escby_x_length) + "x" \
-                        + str(es.escby_y_length) + ": " + str(es.escby_stand_count) + "; ")
-    return output_string
 
 def build_sale_analysis(sales_t, st_info, run_id):
         analysis_set = []
