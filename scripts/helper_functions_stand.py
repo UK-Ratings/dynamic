@@ -18,7 +18,7 @@ import random
 from base.models import *
 from users.models import *
 from scripts.helper_functions import *
-from scripts.helper_functions_event import *
+#from scripts.helper_functions_event import *
 from scripts.helper_functions_pricing import *
 
 from django.db.models import Max
@@ -296,11 +296,15 @@ def build_stand_gradient(rxe, run_id):
                                 calc_gr = 100
                         if(calc_gr < 0):
                                 calc_gr = 0
+                        stand_attributes_record(xx, None, 'Stand Price Gradient', str(int(calc_gr)), 'integer', timezone.now())
                         xx.s_stand_price_gradient = int(calc_gr)
                         xx.save()
                         stand_record_analysis_record(xx, run_id, None, 'Sq Foot Gradient All', str(int(calc_gr)), 'integer')
 
+
 def stand_attributes_record(s_stand, s_number, s_title, s_value, s_type, s_datetime):
+#       Stand Status:  Available, Sold, New Sell, Reserved, New Stand
+#       Stand Price: Base, Price Increase, Price Decrease 
 #        print(f"stand_attribues_record {s_stand} {s_number} {s_title} {s_value} {s_type} {s_datetime}")
         if(s_stand is not None) and ((s_number is not None) or (s_title is not None)):
                 if(s_number is not None):
@@ -374,6 +378,11 @@ def stand_attributes_get_all_data(st_stand):
                 s_number, s_title, s_value, s_datetime = stand_attributes_get(q.sa_stand, q.sa_number, q.sa_title) 
                 sa_data.append([s_number, s_title, s_value, s_datetime])
         return sa_data
+def stand_attributes_get_value(st_stand, st_number, st_title):
+        s_number, s_title, s_value, s_datetime = stand_attributes_get(st_stand, st_number, st_title) 
+        return(s_value)       
+
+
 
 def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
 #        if(stand_number == "2123" or stand_name == "Verkada"):
@@ -391,7 +400,7 @@ def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
         stand_attributes_record(st, None, 'Stand x', str(x), 'float', timezone.now())
         stand_attributes_record(st, None, 'Stand y', str(y), 'float', timezone.now())
         stand_attributes_record(st, None, 'Stand x length', str(x_length), 'float', timezone.now())
-        stand_attributes_record(st, None, 'Stand y x', str(y_length), 'float', timezone.now())
+        stand_attributes_record(st, None, 'Stand y length', str(y_length), 'float', timezone.now())
         stand_attributes_record(st, None, 'Stand Status', 'Available', 'string', timezone.now())
         stand_attributes_record(st, None, 'Stand Price', 'Base', 'string', timezone.now())
         stand_attributes_record(st, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
@@ -482,3 +491,39 @@ def stand_build_sale_analysis(sales_t, st_info, run_id):
                         else:
                                 analysis_set.append([str(q[1]+": "+str(q[2])), 'left', 'top'])
         return(analysis_set)
+
+
+
+#        stand_attributes_record(st, None, 'Stand x', str(x), 'float', timezone.now())
+#        stand_attributes_record(st, None, 'Stand y', str(y), 'float', timezone.now())
+#        stand_attributes_record(st, None, 'Stand x length', str(x_length), 'float', timezone.now())
+#        stand_attributes_record(st, None, 'Stand y length', str(y_length), 'float', timezone.now())
+#        stand_attributes_record(st, None, 'Stand Status', 'Available', 'string', timezone.now())
+#        stand_attributes_record(st, None, 'Stand Price', 'Base', 'string', timezone.now())
+#        stand_attributes_record(st, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
+#        stand_attributes_record(st, None, 'Number of Corners', str(x.est_Number_of_Corners), 'integer', timezone.now())
+#        stand_attributes_record(st, None, 'Stand Zone', str(x.est_Stand_Zone), 'string', timezone.now())
+#        stand_attributes_record(st, None, 'Floor Plan Sector', str(x.est_Floor_Plan_Sector), 'string', timezone.now())
+
+#= stand_attributes_get_value(st_stand, None, 'Stand x')
+#= stand_attributes_get_value(st_stand, None, 'Stand y')
+#= stand_attributes_get_value(st_stand, None, 'Stand x length')
+#= stand_attributes_get_value(st_stand, None, 'Stand y length')
+#= stand_attributes_get_value(st_stand, None, 'Stand Status')
+#= stand_attributes_get_value(st_stand, None, 'Stand Price')
+#= stand_attributes_get_value(st_stand, None, 'Stand Price Gradient')
+#= stand_attributes_get_value(st_stand, None, 'Number of Corners')
+#= stand_attributes_get_value(st_stand, None, 'Stand Zone')
+#= stand_attributes_get_value(st_stand, None, 'Floor Plan Sector')
+
+
+
+#remove out of load last...  Then the models
+
+#class stands(models.Model):
+#    s_stand_status = models.CharField("stand status", max_length=50, blank=True, null=True, )
+#    s_stand_price = models.CharField("stand price", max_length=50, blank=True, null=True, )
+#    s_stand_price_per_sq_ft = models.DecimalField("stand price per sq ft", max_digits=10, decimal_places=2, blank=True, null=True)
+#    s_stand_price_gradient = models.IntegerField("stand price gradient", blank=True, null=True)
+
+#class stand_location(models.Model):

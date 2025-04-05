@@ -120,6 +120,7 @@ def run_event_year(rxe, create_images):
                                 for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
 #                                        s_stand_status = Available, Sold, New Sell, Reserved, New Stand
 #                                        s_stand_price = Base, Price Increase, Price Decrease 
+                                        stand_attributes_record(fs, None, 'Stand Status', 'New Sell', 'string', timezone.now())
                                         fs.s_stand_status = 'New Sell'
                                         fs.save()
 
@@ -132,6 +133,7 @@ def run_event_year(rxe, create_images):
                                                 footer_set.append(['Darker Green higher Price from Average.  Darker Red lower Price from Average','left', 'top'])
                                                 if(create_images):
                                                         render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier_small, "NA", run_id)
+                                        stand_attributes_record(fs, None, 'Stand Status', 'Sold', 'string', timezone.now())
                                         fs.s_stand_status = 'Sold'
                                         fs.save()
 #                                        build_stand_counts_by_date(rxe, ev_date)
@@ -178,11 +180,12 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
                                 record_log_data("aaa_run_process.py", "run_event_year", "working date: " + str(ev_date))
                                 for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
 #                                        s_stand_status = Available, Sold, New Sell, Reserved, New Stand
-#                                        s_stand_price = Base, Price Increase, Price Decrease 
+#                                        s_stand_price = Base, Price Increase, Price Decrease
+                                        stand_attributes_record(fs, None, 'Stand Status', 'New Sell', 'string', timezone.now())
                                         fs.s_stand_status = 'New Sell'
                                         fs.save()
 
-                                        analysis_set_top = build_sale_analysis(x, fs, p_number)
+                                        analysis_set_top = stand_build_sale_analysis(x, fs, p_number)
 
                                         if(create_images == True):
                                                 footer_set = []
@@ -192,6 +195,7 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
                                                 footer_set.append(['Darker Green higher Price from Average.  Darker Red lower Price from Average','left', 'top'])
                                                 if(create_images):
                                                         render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier_small, "NA", p_number)
+                                        stand_attributes_record(fs, None, 'Stand Status', 'New Sell', 'string', timezone.now())
                                         fs.s_stand_status = 'Sold'
                                         fs.save()
 #                                        build_stand_counts_by_date(rxe, ev_date)
@@ -220,6 +224,9 @@ def run(*args):
 
         for x in stands.objects.all():
                 stand_analysis.objects.filter(sa_stand=x).delete()
+                stand_attributes_record(x, None, 'Stand Status', 'Available', 'string', timezone.now())
+                stand_attributes_record(x, None, 'Stand Price', 'Base', 'string', timezone.now())
+                stand_attributes_record(x, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
                 x.s_stand_status = 'Available' 
                 x.s_stand_price = 'Base'
                 x.s_stand_price_gradient = random.randint(0, 100)

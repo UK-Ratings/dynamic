@@ -15,11 +15,10 @@ from math import sqrt
 import random
 import datetime
 
-
 from base.models import *
 from users.models import *
 from scripts.helper_functions import *
-from scripts.helper_functions_stand import *
+from scripts.helper_functions_stand import * #stand_get_analysis_record, stand_attributes_get_value
 
 from django.db.models import Max
 
@@ -43,11 +42,10 @@ def create_event(eg_name, ev_name, ev_start_date, ev_end_date):
                 're_event_start_date': ev_start_date,
                 're_event_end_date': ev_end_date})
         return eve
-def update_event_length_height(eve, fl_length, fl_height):
-        eve.re_floor_length = 1232#fl_length
-        eve.re_floor_height = 1052#fl_height
+def event_update_length_height(eve, fl_length, fl_height):
+        eve.re_floor_length = fl_length
+        eve.re_floor_height = fl_height
         eve.save()
-
 def event_calculate_avg_sq_price(event_name):
         try:
                 rxe = rx_event.objects.get(re_name=event_name)
@@ -78,4 +76,25 @@ def event_calculate_avg_sq_price(event_name):
                 if(min_price < 0.0):
                         min_price = 1
                 print(f"Average sq price: {average_sq_price}, stand_count: {stand_count}, Max Price: {max_price} Min Price: {min_price}")
+def event_determine_floorplan_max_length_height(rxe):
+        min_x_length = 0
+        min_y_length = 0
+        max_x_length = 0
+        max_y_length = 0
 
+        for st in stands.objects.filter(s_rx_event=rxe):
+                sl_x= stand_attributes_get_value(st, None, 'Stand x')
+                sl_y= stand_attributes_get_value(st, None, 'Stand y')
+                sl_x_length= stand_attributes_get_value(st, None, 'Stand x length')
+                sl_y_length= stand_attributes_get_value(st, None, 'Stand y length')
+
+                if(sl_x < min_x_length):
+                        min_x_length = sl_x + sl_x_length
+                if(sl_y < min_y_length):
+                        min_y_length = sl_y + sl_y_length   
+                if(sl_x + sl_x_length > max_x_length):
+                        max_x_length = sl_x + sl_x_length
+                if(sl_y + sl_y_length > max_y_length):
+                        max_y_length = sl_y + sl_y_length
+#        print("min_x_length: ", min_x_length, "min_y_length: ", min_y_length, "max_x_length: ", max_x_length, "max_y_length: ", max_y_length)
+        event_update_length_height(rxe, abs(min_x_length)+abs(max_x_length), abs(min_y_length)+abs(max_y_length))

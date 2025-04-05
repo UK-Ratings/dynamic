@@ -1,22 +1,24 @@
 #!/usr/bin/env python3
 
 from django.utils import timezone
-#from django.contrib import messages
 import os
 from dotenv import load_dotenv
 from django.conf import settings
-#from django.db.models import Max
-#import numpy as np
 import pandas as pd
 from pandas._libs.tslibs.nattype import NaTType
-#import random
 import datetime
 import csv
 
+#from django.contrib import messages
+#from django.db.models import Max
+#import numpy as np
+#import random
+
+
 from base.models import *
-from scripts.helper_functions import *
+#from scripts.helper_functions import *
 from scripts.helper_functions_render import *
-from scripts.helper_functions_stand import *
+#from scripts.helper_functions_stand import *
 from scripts.helper_functions_event import *
 
 
@@ -48,117 +50,6 @@ def load_stand_attribute_data(rxe, filename):
                 for st in stands.objects.filter(s_rx_event=rxe, s_number=row['Stand Name']):
 #                        print(f"load_stand_attribute_data: {st} {row['Stand Name']}")
                         stand_attributes_record(st, None, str(row['Title']), str(row['Value']), str(row['Data Type']), timezone.now())
-
-def determine_floorplan_max_length_height(rxe):
-
-        min_x_length = 0
-        min_y_length = 0
-        max_x_length = 0
-        max_y_length = 0
-
-        for x in stand_location.objects.filter(sl_stand__s_rx_event=rxe):
-                if(x.sl_x < min_x_length):
-                        min_x_length = x.sl_x + x.sl_x_length
-                if(x.sl_y < min_y_length):
-                        min_y_length = x.sl_y + x.sl_y_length   
-                if(x.sl_x + x.sl_x_length > max_x_length):
-                        max_x_length = x.sl_x + x.sl_x_length
-                if(x.sl_y + x.sl_y_length > max_y_length):
-                        max_y_length = x.sl_y + x.sl_y_length
-#        print("min_x_length: ", min_x_length, "min_y_length: ", min_y_length, "max_x_length: ", max_x_length, "max_y_length: ", max_y_length)
-        update_event_length_height(rxe, abs(min_x_length)+abs(max_x_length), abs(min_y_length)+abs(max_y_length))
-
-def zzzload_transaction_sales_data(rxe, filename):
-        file_path = os.path.join(settings.BASE_DIR, 'data', filename)
-        if not os.path.exists(file_path):
-                raise FileNotFoundError(f"File not found: {file_path}")
-
-        data = pd.read_excel(file_path)
-
-    # Iterate through each row and create instances of event_sales_transactions
-        for _, row in data.iterrows():
-                if not isinstance(row['Order Created Date'], NaTType) and row['Recipient Country'] is not None and len(row['Recipient Country']) > 0:
-                        last_modified_date = timezone.make_aware(row['Last Modified Date']) if pd.notnull(row['Last Modified Date']) else None
-                        order_created_date = timezone.make_aware(row['Order Created Date']) if pd.notnull(row['Order Created Date']) else None
-
-                        up, create = event_sales_transactions.objects.update_or_create(
-                                est_event=rxe,
-                                est_Company_Name=row['Company Name'],
-                                est_Recipient_Country=row['Recipient Country'],
-                                est_Customer_Type=row['Customer Type'],
-                                est_Opportunity_Type=row['Opportunity Type'],
-                                est_Opportunity_Owner=row['Opportunity Owner'],
-                                est_Stand_Name_Length_Width=row['Stand Name (Length * Width)'],
-                                est_Stand_Area=row['Stand Area'],
-                                est_Number_of_Corners=row['Number of Corners'],
-                                est_Stand_Zone=row['Stand Zone'],
-                                est_Floor_Plan_Sector=row['Floor Plan Sector'],
-                                est_Sharer_Entitlements=row['Sharer Entitlements'],
-                                est_Last_Modified_Date=last_modified_date,
-                                est_Total_Net_Amount=row['Total Net Amount'],
-                                est_Order_Created_Date=order_created_date,
-                                est_Packages_Sold=row['Packages Sold'],
-                                est_Product_Name=row['Product Name'],)
-
-#        cn = 'AIC Inc.'
-#        cn = 'Aiphone Corporation'
-        if(1==0):
-                for x in event_sales_transactions.objects.filter(est_event=rxe):
-                        print(x.est_event, x.est_Company_Name, x.est_Recipient_Country, x.est_Customer_Type, x.est_Opportunity_Type,
-                                x.est_Opportunity_Owner, x.est_Stand_Name_Length_Width, x.est_Stand_Area, x.est_Number_of_Corners,
-                                x.est_Stand_Zone, x.est_Floor_Plan_Sector, x.est_Sharer_Entitlements, x.est_Sharer_Companies,
-                                x.est_Last_Modified_Date, x.est_Total_Net_Amount, x.est_Order_Created_Date, x.est_Packages_Sold,
-                                x.est_Product_Name, x.est_Stand_Name_Cleaned, x.est_Stand_Name_Dim_Cleaned)
-
-#        for x in event_sales_transactions.objects.filter(est_event=rxe, est_Company_Name=cn):
-        for x in event_sales_transactions.objects.filter(est_event=rxe):
-                snlw = x.est_Stand_Name_Length_Width.split(",")
-                if(len(snlw) > 0):
-                        first = True
-#                        print("snlw: ", x.est_Stand_Name_Length_Width, snlw )
-                        for y in snlw:
-                                first_space_index = y.find(" ")
-                                if first_space_index != -1:
-                                        st_name = y[:first_space_index].strip()
-                                        st_dim = y[first_space_index:].strip()
-#                                        print("y: ", x.est_Stand_Name_Length_Width, y, st_name, st_dim )
-                                        if first:
-                                                x.est_Stand_Name_Cleaned = st_name
-                                                x.est_Stand_Name_Dim_Cleaned = st_dim
-                                                x.save()
-                                                first = False
-                                        else:
-                                                up, create = event_sales_transactions.objects.update_or_create(
-                                                        est_event=x.est_event,
-                                                        est_Company_Name=x.est_Company_Name,
-                                                        est_Recipient_Country=x.est_Recipient_Country,
-                                                        est_Customer_Type=x.est_Customer_Type,
-                                                        est_Opportunity_Type=x.est_Opportunity_Type,
-                                                        est_Opportunity_Owner=x.est_Opportunity_Owner,
-                                                        est_Stand_Name_Length_Width=x.est_Stand_Name_Length_Width,
-                                                        est_Stand_Area=x.est_Stand_Area,
-                                                        est_Number_of_Corners=x.est_Number_of_Corners,
-                                                        est_Stand_Zone=x.est_Stand_Zone,
-                                                        est_Floor_Plan_Sector=x.est_Floor_Plan_Sector,
-                                                        est_Sharer_Entitlements=x.est_Sharer_Entitlements,
-                                                        est_Last_Modified_Date=x.est_Last_Modified_Date,
-                                                        est_Total_Net_Amount=0,
-                                                        est_Order_Created_Date=x.est_Order_Created_Date,
-                                                        est_Packages_Sold=x.est_Packages_Sold,
-                                                        est_Product_Name=x.est_Product_Name,
-                                                        est_Stand_Name_Cleaned=st_name,
-                                                        est_Stand_Name_Dim_Cleaned=st_dim)
-
-        if(1==0):
-#                cn = 'Milestone Systems'
-#                for x in event_sales_transactions.objects.filter(est_event=rxe, est_Company_Name=cn):
-                for x in event_sales_transactions.objects.filter(est_event=rxe):
-                        print(x.est_event, x.est_Company_Name, x.est_Recipient_Country, x.est_Customer_Type, x.est_Opportunity_Type,
-                                x.est_Opportunity_Owner, x.est_Stand_Name_Length_Width, x.est_Stand_Area, x.est_Number_of_Corners,
-                                x.est_Stand_Zone, x.est_Floor_Plan_Sector, x.est_Sharer_Entitlements, x.est_Sharer_Companies,
-                                x.est_Last_Modified_Date, x.est_Total_Net_Amount, x.est_Order_Created_Date, x.est_Packages_Sold,
-                                x.est_Product_Name, x.est_Stand_Name_Cleaned, x.est_Stand_Name_Dim_Cleaned)
-
 def load_transaction_sales_data(rxe, filename):
         file_path = os.path.join(settings.BASE_DIR, 'data', filename)
         if not os.path.exists(file_path):
@@ -361,7 +252,7 @@ def run(*args):
         filename = 'ISC_West25_floorplan.xlsx'
         ratio_multiplier = 8.333333
         load_floorplan_data(rxe, filename, ratio_multiplier)
-        determine_floorplan_max_length_height(rxe)
+        event_determine_floorplan_max_length_height(rxe)
 
 #        #Only do if need to recreate the stand attributes file
 #        rxe = get_event('ISC West 2025')
