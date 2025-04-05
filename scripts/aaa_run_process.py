@@ -27,6 +27,7 @@ from scripts.helper_functions import *
 from scripts.helper_functions_render import *
 from scripts.stand_analysis import *
 from scripts.event_analysis import *
+from scripts.aaa_reset_and_load import load_stand_attribute_data
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
@@ -128,7 +129,7 @@ def run_event_year(rxe, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
         to_do = 0
-        while ev_date <= end_date and to_do < 399999999:
+        while ev_date <= end_date and to_do < 3:
 #        if (1 == 0):
                 if(ev_date == st_date):
                         analysis_set_top = []
@@ -187,7 +188,7 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
         to_do = 0
-        while ev_date <= end_date and to_do < 3999999:
+        while ev_date <= end_date and to_do < 3:
 #        if (1 == 0):
                 if(ev_date == st_date):
                         analysis_set_top = []
@@ -249,6 +250,10 @@ def run(*args):
                 x.s_stand_price = 'Base'
                 x.s_stand_price_gradient = random.randint(0, 100)
                 x.save()
+        filename = 'ISC_West25_stand_attributes.xlsx'
+        rxe = get_event('ISC West 2025')
+        load_stand_attribute_data(rxe, filename)
+
 
         record_log_data("aaa_run_process.py", "run", "starting... reset data")
 #        aaa_reset_and_load.run()
@@ -258,7 +263,7 @@ def run(*args):
         rx_event = get_event(event_name)
 
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-        run_event_year(rx_event, False)
+        run_event_year(rx_event, True)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
 
@@ -276,7 +281,7 @@ def run(*args):
 #                        recs = pricing_rules_get_all_data(rx_event, r)
 #                        for q in recs:
 #                                print(q)
-                        run_event_monte_carlo_simulation(rx_event, r, False)
+                        run_event_monte_carlo_simulation(rx_event, r, True)
 
 #        stand_analysis_price(event_name)
 #        build_stand_gradient('ISC West 2025')

@@ -88,6 +88,8 @@ class event_sales_transactions(models.Model):
     est_Packages_Sold = models.CharField("Packages Sold", max_length=300, blank=True, null=True, )
     est_Product_Name = models.CharField("Product Name", max_length=300, blank=True, null=True, )
 
+
+#remove s_stand_status and others???  Store in stand_attributes???
 class stands(models.Model):
     s_id = models.IntegerField(null=True, blank=True)
     s_rx_event = models.ForeignKey(rx_event, blank=True, null=True, on_delete=models.CASCADE)
@@ -114,6 +116,20 @@ class stand_location(models.Model):
     class Meta:
         indexes = [
             models.Index(fields=['sl_stand'], name='stand_location_index1'),
+        ]
+
+# will use these for identification and to match to the rules in time
+class stand_attributes(models.Model):
+    sa_stand = models.ForeignKey(stands, blank=True, null=True, on_delete=models.CASCADE)
+    sa_number = models.IntegerField("stand attribute number")
+    sa_title = models.CharField("stand attribute title", max_length=300, blank=True, null=True, )    
+    sa_value = models.CharField("stand attribute value", max_length=300, blank=True, null=True, )
+    sa_type = models.CharField("stand attribute type", max_length=50, blank=True, null=True, )
+    sa_datetime = models.DateTimeField("stand attribute datetime", blank=True, null=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=['sa_stand','sa_number'], name='stand_attributes_index1'),
+            models.Index(fields=['sa_stand','sa_title'], name='stand_attributes_index2'),
         ]
 
 class stand_analysis(models.Model):

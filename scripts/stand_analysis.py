@@ -193,15 +193,9 @@ def stand_analysis_price_apply_monte_carlo(sales_rec, given_stand, run_id):
                 stand_record_analysis_record(fs.sl_stand, run_id, 30, 'Sold Stand Area', st_area, 'string')
                 stand_record_analysis_record(fs.sl_stand, run_id, 40, 'Sold Net Price', str(float(sales_rec.est_Total_Net_Amount)), 'float')
                 stand_record_analysis_record(fs.sl_stand, run_id, 50, 'Sold Price Per sq ft', str(float(float(sales_rec.est_Total_Net_Amount)/st_area_total)), 'float')
-
-#        analysis_set.append(["Stand Dimenstions: " + str(sales_t.est_Stand_Name_Dim_Cleaned), 'left', 'top'])
-#        analysis_set.append(["Stand Area: " + str(sales_t.est_Stand_Area), 'left', 'top'])
-#        analysis_set.append(["Stand Corners: " + str(sales_t.est_Number_of_Corners), 'left', 'top'])
-#        analysis_set.append(["Stand Zone: " + str(sales_t.est_Stand_Zone), 'left', 'top'])
-#        analysis_set.append(["Stand Sector: " + str(sales_t.est_Floor_Plan_Sector), 'left', 'top'])
-
-#        analysis_set.append(["Sharer Entitlements: " + str(sales_t.est_Sharer_Entitlements), 'left', 'top'])
-#        analysis_set.append(["Sharer Companies: " + str(sales_t.est_Sharer_Companies), 'left', 'top'])
+                stand_record_analysis_record(fs.sl_stand, run_id, 60, 'Corners', str(sales_rec.est_Number_of_Corners), 'string')
+                stand_record_analysis_record(fs.sl_stand, run_id, 61, 'Stand Zone', str(sales_rec.est_Stand_Zone), 'string')
+                stand_record_analysis_record(fs.sl_stand, run_id, 62, 'Floor Plan Sector', str(sales_rec.est_Floor_Plan_Sector), 'string')
 
                 rxe = given_stand.s_rx_event
                 p_title = "Base Sq Price"
@@ -226,10 +220,10 @@ def stand_analysis_price_apply_monte_carlo(sales_rec, given_stand, run_id):
                         mc_price = base_value * st_area_total
                 if(corners_title is not None):
                         all_rules += str(corners_title) + ": " + str(corners_value) + ", "
-#                        mc_price = mc_price * corners_value
+                        mc_price = mc_price * corners_value
                 if(sz_title is not None):
                         all_rules += str(sz_title) + ": " + str(sz_value) + ", "
-                        mc_price = mc_price * sz_value
+#                        mc_price = mc_price * sz_value
                 if(fps_title is not None):
                         all_rules += str(fps_title) + ": " + str(fps_value) + ", "
 #                        mc_price = mc_price * fps_value

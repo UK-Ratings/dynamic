@@ -117,9 +117,9 @@ def load_pr(rxe):
 
         pricing_rules_record(rxe, 0, None, 'Base Sq Price', '30.0', 'float', default_start_date, default_end_date)
         pricing_rules_record(rxe, 0, None, 'Corners: 1', '1', 'float', default_start_date, default_end_date)
-        pricing_rules_record(rxe, 0, None, 'Corners: 2', '1', 'float', default_start_date, default_end_date)
-        pricing_rules_record(rxe, 0, None, 'Corners: 3', '1', 'float', default_start_date, default_end_date)
-        pricing_rules_record(rxe, 0, None, 'Corners: 4', '1', 'float', default_start_date, default_end_date)
+        pricing_rules_record(rxe, 0, None, 'Corners: 2', '2', 'float', default_start_date, default_end_date)
+        pricing_rules_record(rxe, 0, None, 'Corners: 3', '4', 'float', default_start_date, default_end_date)
+        pricing_rules_record(rxe, 0, None, 'Corners: 4', '8', 'float', default_start_date, default_end_date)
         pricing_rules_record(rxe, 0, None, 'Corners: 0', '1', 'float', default_start_date, default_end_date)
 
         pricing_rules_record(rxe, 0, None, 'Stand Zone: Premium 1', '20', 'float', default_start_date, default_end_date)
@@ -133,12 +133,12 @@ def load_pr(rxe):
         pricing_rules_record(rxe, 0, None, 'Stand Zone: Target Market 8', '16', 'float', default_start_date, default_end_date)
 
         pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: 3 Alarm', '1', 'float', default_start_date, default_end_date)
-        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Cyber Security n ConIOT', '1', 'float', default_start_date, default_end_date)
-        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Drones and Robotics', '1', 'float', default_start_date, default_end_date)
-        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Emerging Tech', '1', 'float', default_start_date, default_end_date)
-        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: International Sourcing', '1', 'float', default_start_date, default_end_date)
-        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Public Safety', '1', 'float', default_start_date, default_end_date)
-        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Smart Home', '1', 'float', default_start_date, default_end_date)
+        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Cyber Security n ConIOT', '2', 'float', default_start_date, default_end_date)
+        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Drones and Robotics', '4', 'float', default_start_date, default_end_date)
+        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Emerging Tech', '8', 'float', default_start_date, default_end_date)
+        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: International Sourcing', '16', 'float', default_start_date, default_end_date)
+        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Public Safety', '20', 'float', default_start_date, default_end_date)
+        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Smart Home', '24', 'float', default_start_date, default_end_date)
 
         start_date = timezone.make_aware(datetime.datetime(2024, 4, 12, 0, 0, 0))
         end_date = timezone.make_aware(datetime.datetime(2024, 6, 12, 0, 0, 0))
