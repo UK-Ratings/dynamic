@@ -103,7 +103,7 @@ def run_event_year(rxe, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
         to_do = 0
-        while ev_date <= end_date and to_do < 3:
+        while ev_date <= end_date and to_do < 399999999:
 #        if (1 == 0):
                 if(ev_date == st_date):
                         analysis_set_top = []
@@ -121,8 +121,8 @@ def run_event_year(rxe, create_images):
 #                                        s_stand_status = Available, Sold, New Sell, Reserved, New Stand
 #                                        s_stand_price = Base, Price Increase, Price Decrease 
                                         stand_attributes_record(fs, None, 'Stand Status', 'New Sell', 'string', timezone.now())
-                                        fs.s_stand_status = 'New Sell'
-                                        fs.save()
+#                                        fs.s_stand_status = 'New Sell'
+#                                        fs.save()
 
                                         if(create_images == True):
                                                 footer_set = []
@@ -134,8 +134,8 @@ def run_event_year(rxe, create_images):
                                                 if(create_images):
                                                         render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier_small, "NA", run_id)
                                         stand_attributes_record(fs, None, 'Stand Status', 'Sold', 'string', timezone.now())
-                                        fs.s_stand_status = 'Sold'
-                                        fs.save()
+#                                        fs.s_stand_status = 'Sold'
+#                                        fs.save()
 #                                        build_stand_counts_by_date(rxe, ev_date)
                                 to_do = to_do + 1
                 ev_date = ev_date + relativedelta(days=1)
@@ -164,7 +164,7 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
         to_do = 0
-        while ev_date <= end_date and to_do < 3:
+        while ev_date <= end_date and to_do < 39999999:
 #        if (1 == 0):
                 if(ev_date == st_date):
                         analysis_set_top = []
@@ -182,8 +182,8 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
 #                                        s_stand_status = Available, Sold, New Sell, Reserved, New Stand
 #                                        s_stand_price = Base, Price Increase, Price Decrease
                                         stand_attributes_record(fs, None, 'Stand Status', 'New Sell', 'string', timezone.now())
-                                        fs.s_stand_status = 'New Sell'
-                                        fs.save()
+#                                        fs.s_stand_status = 'New Sell'
+#                                        fs.save()
 
                                         analysis_set_top = stand_build_sale_analysis(x, fs, p_number)
 
@@ -196,8 +196,8 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
                                                 if(create_images):
                                                         render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier_small, "NA", p_number)
                                         stand_attributes_record(fs, None, 'Stand Status', 'Sold', 'string', timezone.now())
-                                        fs.s_stand_status = 'Sold'
-                                        fs.save()
+#                                        fs.s_stand_status = 'Sold'
+#                                        fs.save()
 #                                        build_stand_counts_by_date(rxe, ev_date)
                                 to_do = to_do + 1
                 ev_date = ev_date + relativedelta(days=1)
@@ -227,10 +227,10 @@ def run(*args):
                 stand_attributes_record(x, None, 'Stand Status', 'Available', 'string', timezone.now())
                 stand_attributes_record(x, None, 'Stand Price', 'Base', 'string', timezone.now())
                 stand_attributes_record(x, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
-                x.s_stand_status = 'Available' 
-                x.s_stand_price = 'Base'
-                x.s_stand_price_gradient = random.randint(0, 100)
-                x.save()
+#                x.s_stand_status = 'Available' 
+#                x.s_stand_price = 'Base'
+#                x.s_stand_price_gradient = random.randint(0, 100)
+#                x.save()
         filename = 'ISC_West25_stand_attributes.xlsx'
         rxe = get_event('ISC West 2025')
         load_stand_attribute_data(rxe, filename)
@@ -244,7 +244,7 @@ def run(*args):
         rx_event = get_event(event_name)
 
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-        run_event_year(rx_event, True)
+        run_event_year(rx_event, False)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
 
@@ -262,7 +262,7 @@ def run(*args):
 #                        recs = pricing_rules_get_all_data(rx_event, r)
 #                        for q in recs:
 #                                print(q)
-                        run_event_monte_carlo_simulation(rx_event, r, True)
+                        run_event_monte_carlo_simulation(rx_event, r, False)
 
 #        stand_analysis_price(event_name)
 #        build_stand_gradient('ISC West 2025')

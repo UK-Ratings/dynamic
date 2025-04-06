@@ -139,7 +139,50 @@ def stand_calc_and_store_gradient(st, run_id, sq_price, min_price, max_price):
                 calc_gr = 0
 #        print(f"calc_gr: {calc_gr}")
         stand_record_analysis_record(st, run_id, 300, 'Sq Foot Gradient', str(int(calc_gr)), 'integer')
+
+
 def stand_analysis_price(rxe, run_id):
+
+        stand_not_found = 0
+        stands_found = 0
+        if(rxe is not None):
+                stand_analysis.objects.filter(sa_stand__s_rx_event = rxe, sa_run_id = run_id).delete()
+                for x in event_sales_transactions.objects.filter(est_event = rxe):
+#                        print(f"Stand: {x.est_Stand_Name_Cleaned} Customer Type: {x.est_Customer_Type} Stand Area: {x.est_Stand_Name_Dim_Cleaned} Net Price: {x.est_Total_Net_Amount}")
+                        tst = stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned)
+#                        st = stand_location.objects.filter(sl_stand__s_rx_event=rxe, sl_stand__s_number=x.est_Stand_Name_Cleaned)
+                        if(len(tst) > 0):
+                                stands_found += 1
+                        else:
+#                                st = stand_location.objects.filter(sl_stand__s_rx_event=rxe, sl_stand__s_name__iexact=x.est_Company_Name.lower())
+                                tst = stands.objects.filter(s_rx_event=rxe, s_name__iexact=x.est_Company_Name.lower())
+                        if(len(tst) == 0):
+                                stand_not_found += 1
+#                                print(f"Stand: {x.est_Stand_Name_Cleaned} not found in stand_location")
+#                                print(f"    est_Company_Name: {x.est_Company_Name}, est_Stand_Name_Length_Width: {x.est_Stand_Name_Length_Width} est_Stand_Name_Cleaned: {x.est_Stand_Name_Cleaned}")
+#                                print(f"    est_Stand_Name_Dim_Cleaned: {x.est_Stand_Name_Dim_Cleaned} est_Total_Net_Amount: {x.est_Total_Net_Amount}")
+#                                print(f"    Stand: {x.est_Stand_Name_Cleaned} Customer Type: {x.est_Customer_Type} Stand Area: {x.est_Stand_Name_Dim_Cleaned} Net Price: {x.est_Total_Net_Amount}")
+                        for fs in tst:
+
+#                                print(f"fs.sl_x_length: {fs.sl_x_length} fs.sl_y_length: {fs.sl_y_length}")
+                                stand_record_analysis_record(fs, run_id, 10, 'Stand Zone', str(x.est_Stand_Area), 'string')
+                                stand_record_analysis_record(fs, run_id, 20, 'Customer Type', str(x.est_Customer_Type), 'string')
+                                sl_x_length= stand_attributes_get_value(fs, None, 'Stand x length')
+                                sl_y_length= stand_attributes_get_value(fs, None, 'Stand y length')
+                                if(sl_x_length is not None and sl_y_length is not None):
+                                        st_area = str(sl_y_length) + "x" + str(sl_x_length)
+                                else:
+                                        st_area = "Unknown"
+#                                print(f"Stand Area: {st_area}")
+                                stand_record_analysis_record(fs, run_id, 30, 'Stand Area', st_area, 'string')
+#                                print(f"est_Total_Net_Amount: {x.est_Total_Net_Amount} fs.sl_x_length: {fs.sl_x_length} fs.sl_y_length: {fs.sl_y_length}")
+                                stand_record_analysis_record(fs, run_id, 40, 'Net Price', str(float(x.est_Total_Net_Amount)), 'float')
+                                stand_record_analysis_record(fs, run_id, 50, 'Price Per sq ft', str(float(float(x.est_Total_Net_Amount)/float(sl_x_length * sl_y_length))), 'float')
+                                stand_calc_and_store_gradient(fs, run_id, 129.49, 68.42, 246.55)
+        print(f"Stand not found: {stand_not_found}, Stands found: {stands_found}")                        
+
+
+def zzzstand_analysis_price(rxe, run_id):
 
         stand_not_found = 0
         stands_found = 0
@@ -173,23 +216,64 @@ def stand_analysis_price(rxe, run_id):
                                 stand_record_analysis_record(fs.sl_stand, run_id, 50, 'Price Per sq ft', str(float(float(x.est_Total_Net_Amount)/float(fs.sl_x_length * fs.sl_y_length))), 'float')
                                 stand_calc_and_store_gradient(fs.sl_stand, run_id, 129.49, 68.42, 246.55)
         print(f"Stand not found: {stand_not_found}, Stands found: {stands_found}")                        
+
+def zzzstand_analysis_price(rxe, run_id):
+
+        stand_not_found = 0
+        stands_found = 0
+        if(rxe is not None):
+                stand_analysis.objects.filter(sa_stand__s_rx_event = rxe, sa_run_id = run_id).delete()
+                for x in event_sales_transactions.objects.filter(est_event = rxe):
+#                        print(f"Stand: {x.est_Stand_Name_Cleaned} Customer Type: {x.est_Customer_Type} Stand Area: {x.est_Stand_Name_Dim_Cleaned} Net Price: {x.est_Total_Net_Amount}")
+                        st = stand_location.objects.filter(sl_stand__s_rx_event=rxe, sl_stand__s_number=x.est_Stand_Name_Cleaned)
+                        if(len(st) > 0):
+                                stands_found += 1
+                        else:
+                                st = stand_location.objects.filter(sl_stand__s_rx_event=rxe, sl_stand__s_name__iexact=x.est_Company_Name.lower())
+                        if(len(st) == 0):
+                                stand_not_found += 1
+#                                print(f"Stand: {x.est_Stand_Name_Cleaned} not found in stand_location")
+#                                print(f"    est_Company_Name: {x.est_Company_Name}, est_Stand_Name_Length_Width: {x.est_Stand_Name_Length_Width} est_Stand_Name_Cleaned: {x.est_Stand_Name_Cleaned}")
+#                                print(f"    est_Stand_Name_Dim_Cleaned: {x.est_Stand_Name_Dim_Cleaned} est_Total_Net_Amount: {x.est_Total_Net_Amount}")
+#                                print(f"    Stand: {x.est_Stand_Name_Cleaned} Customer Type: {x.est_Customer_Type} Stand Area: {x.est_Stand_Name_Dim_Cleaned} Net Price: {x.est_Total_Net_Amount}")
+                        for fs in st:
+#                                print(f"fs.sl_x_length: {fs.sl_x_length} fs.sl_y_length: {fs.sl_y_length}")
+                                stand_record_analysis_record(fs.sl_stand, run_id, 10, 'Stand Zone', str(x.est_Stand_Area), 'string')
+                                stand_record_analysis_record(fs.sl_stand, run_id, 20, 'Customer Type', str(x.est_Customer_Type), 'string')
+                                if(fs.sl_x_length is not None and fs.sl_y_length is not None):
+                                        st_area = str(fs.sl_y_length) + "x" + str(fs.sl_x_length)
+                                else:
+                                        st_area = "Unknown"
+#                                print(f"Stand Area: {st_area}")
+                                stand_record_analysis_record(fs.sl_stand, run_id, 30, 'Stand Area', st_area, 'string')
+#                                print(f"est_Total_Net_Amount: {x.est_Total_Net_Amount} fs.sl_x_length: {fs.sl_x_length} fs.sl_y_length: {fs.sl_y_length}")
+                                stand_record_analysis_record(fs.sl_stand, run_id, 40, 'Net Price', str(float(x.est_Total_Net_Amount)), 'float')
+                                stand_record_analysis_record(fs.sl_stand, run_id, 50, 'Price Per sq ft', str(float(float(x.est_Total_Net_Amount)/float(fs.sl_x_length * fs.sl_y_length))), 'float')
+                                stand_calc_and_store_gradient(fs.sl_stand, run_id, 129.49, 68.42, 246.55)
+        print(f"Stand not found: {stand_not_found}, Stands found: {stands_found}")                        
+
+
 def stand_analysis_price_apply_monte_carlo(sales_rec, given_stand, run_id):
 
-        for fs in stand_location.objects.filter(sl_stand = given_stand):
-                stand_record_analysis_record(fs.sl_stand, run_id, 10, 'Stand Zone', str(sales_rec.est_Stand_Area), 'string')
-                stand_record_analysis_record(fs.sl_stand, run_id, 20, 'Customer Type', str(sales_rec.est_Customer_Type), 'string')
-                if(fs.sl_x_length is not None and fs.sl_y_length is not None):
-                        st_area = str(fs.sl_y_length) + "x" + str(fs.sl_x_length)
-                        st_area_total = float(fs.sl_x_length * fs.sl_y_length)
+#        for fs in stand_location.objects.filter(sl_stand = given_stand):
+        for st in stands.objects.filter(id = given_stand.id):
+                sl_x_length= stand_attributes_get_value(st, None, 'Stand x length')
+                sl_y_length= stand_attributes_get_value(st, None, 'Stand y length')
+
+                stand_record_analysis_record(st, run_id, 10, 'Stand Zone', str(sales_rec.est_Stand_Area), 'string')
+                stand_record_analysis_record(st, run_id, 20, 'Customer Type', str(sales_rec.est_Customer_Type), 'string')
+                if(sl_x_length is not None and sl_y_length is not None):
+                        st_area = str(sl_y_length) + "x" + str(sl_x_length)
+                        st_area_total = float(sl_x_length * sl_y_length)
                 else:
                         st_area = "Unknown"
                         st_area_total = 1
-                stand_record_analysis_record(fs.sl_stand, run_id, 30, 'Sold Stand Area', st_area, 'string')
-                stand_record_analysis_record(fs.sl_stand, run_id, 40, 'Sold Net Price', str(float(sales_rec.est_Total_Net_Amount)), 'float')
-                stand_record_analysis_record(fs.sl_stand, run_id, 50, 'Sold Price Per sq ft', str(float(float(sales_rec.est_Total_Net_Amount)/st_area_total)), 'float')
-                stand_record_analysis_record(fs.sl_stand, run_id, 60, 'Corners', str(sales_rec.est_Number_of_Corners), 'string')
-                stand_record_analysis_record(fs.sl_stand, run_id, 61, 'Stand Zone', str(sales_rec.est_Stand_Zone), 'string')
-                stand_record_analysis_record(fs.sl_stand, run_id, 62, 'Floor Plan Sector', str(sales_rec.est_Floor_Plan_Sector), 'string')
+                stand_record_analysis_record(st, run_id, 30, 'Sold Stand Area', st_area, 'string')
+                stand_record_analysis_record(st, run_id, 40, 'Sold Net Price', str(float(sales_rec.est_Total_Net_Amount)), 'float')
+                stand_record_analysis_record(st, run_id, 50, 'Sold Price Per sq ft', str(float(float(sales_rec.est_Total_Net_Amount)/st_area_total)), 'float')
+                stand_record_analysis_record(st, run_id, 60, 'Corners', str(sales_rec.est_Number_of_Corners), 'string')
+                stand_record_analysis_record(st, run_id, 61, 'Stand Zone', str(sales_rec.est_Stand_Zone), 'string')
+                stand_record_analysis_record(st, run_id, 62, 'Floor Plan Sector', str(sales_rec.est_Floor_Plan_Sector), 'string')
 
                 rxe = given_stand.s_rx_event
                 p_title = "Base Sq Price"
@@ -222,12 +306,12 @@ def stand_analysis_price_apply_monte_carlo(sales_rec, given_stand, run_id):
                         all_rules += str(fps_title) + ": " + str(fps_value) + ", "
 #                        mc_price = mc_price * fps_value
 
-                stand_record_analysis_record(fs.sl_stand, run_id, 240, 'Net Price', str(float(mc_price)), 'float')
-                stand_record_analysis_record(fs.sl_stand, run_id, 250, 'Price Per sq ft', str(float(float(mc_price)/st_area_total)), 'float')
-                stand_calc_and_store_gradient(fs.sl_stand, run_id, 129.49, 68.42, 246.55)
+                stand_record_analysis_record(st, run_id, 240, 'Net Price', str(float(mc_price)), 'float')
+                stand_record_analysis_record(st, run_id, 250, 'Price Per sq ft', str(float(float(mc_price)/st_area_total)), 'float')
+                stand_calc_and_store_gradient(st, run_id, 129.49, 68.42, 246.55)
 #                stand_calc_and_store_gradient(fs.sl_stand, run_id, 40, 1, 80)
-                stand_record_analysis_record(fs.sl_stand, run_id, 260, 'MC Rules Applied', all_rules, 'string')
-                sa_analysis_number, sa_analysis_title, sa_analysis_value = stand_get_analysis_record(fs.sl_stand, run_id, None, 'Sq Foot Gradient')
+                stand_record_analysis_record(st, run_id, 260, 'MC Rules Applied', all_rules, 'string')
+                sa_analysis_number, sa_analysis_title, sa_analysis_value = stand_get_analysis_record(st, run_id, None, 'Sq Foot Gradient')
 #                print(f"{sa_analysis_number} {sa_analysis_title} {sa_analysis_value}")
 #                for ppp in stand_get_all_analysis_records(fs.sl_stand, run_id):
 #                        print(f"{ppp[0]} {ppp[1]} {ppp[2]}")
@@ -297,8 +381,8 @@ def build_stand_gradient(rxe, run_id):
                         if(calc_gr < 0):
                                 calc_gr = 0
                         stand_attributes_record(xx, None, 'Stand Price Gradient', str(int(calc_gr)), 'integer', timezone.now())
-                        xx.s_stand_price_gradient = int(calc_gr)
-                        xx.save()
+#                        xx.s_stand_price_gradient = int(calc_gr)
+#                        xx.save()
                         stand_record_analysis_record(xx, run_id, None, 'Sq Foot Gradient All', str(int(calc_gr)), 'integer')
 
 
@@ -389,14 +473,15 @@ def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
 #                print("create_stand: ", stand_name, stand_number, x, y, x_length, y_length)
         st, created = stands.objects.update_or_create(s_rx_event= eve, 
                         s_name=stand_name,
-                        s_number=stand_number,
-                        defaults={
-                                's_stand_status':'Available', 
-                                's_stand_price':'Base',
-                                's_stand_price_gradient': random.randint(0, 100),})
+                        s_number=stand_number)
+#        ,
+#                        defaults={
+#                                's_stand_status':'Available', 
+#                                's_stand_price':'Base',
+#                                's_stand_price_gradient': random.randint(0, 100),})
 
-        sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
-                                'sl_x':x, 'sl_y':y, 'sl_x_length':x_length, 'sl_y_length':y_length})
+#        sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
+#                                'sl_x':x, 'sl_y':y, 'sl_x_length':x_length, 'sl_y_length':y_length})
         stand_attributes_record(st, None, 'Stand x', str(x), 'float', timezone.now())
         stand_attributes_record(st, None, 'Stand y', str(y), 'float', timezone.now())
         stand_attributes_record(st, None, 'Stand x length', str(x_length), 'float', timezone.now())
@@ -408,15 +493,20 @@ def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
 
 def build_stand_counts_by_date(rxe, ev_date):
     event_stand_count_by_date.objects.filter(escby_rx_event=rxe, escby_date=ev_date).delete()
-    for s in stand_location.objects.filter(sl_stand__s_rx_event=rxe):
+#    for s in stand_location.objects.filter(sl_stand__s_rx_event=rxe):
+    for st in stands.objects.filter(s_rx_event=rxe):
+        sl_x_length = stand_attributes_get_value(st, None, 'Stand x length')
+        sl_y_length = stand_attributes_get_value(st, None, 'Stand y length')
+        stand_status = stand_attributes_get_value(st, None, 'Stand Status')
+
 #        print(ev_date, s.sl_stand.s_stand_status, s.sl_x_length, s.sl_y_length)
         # Use get_or_create to fetch or create the object
         obj, created = event_stand_count_by_date.objects.get_or_create(
             escby_rx_event=rxe,
             escby_date=ev_date,
-            escby_x_length=abs(s.sl_x_length),
-            escby_y_length=abs(s.sl_y_length),
-            escby_stand_status=s.sl_stand.s_stand_status,
+            escby_x_length=abs(sl_x_length),
+            escby_y_length=abs(sl_y_length),
+            escby_stand_status=stand_status,
             defaults={'escby_stand_count': 1}  # Set initial count to 1 if created
         )
         # Increment the count if the object already exists

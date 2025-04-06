@@ -37,6 +37,7 @@ def load_floorplan_data(rxe, filename, ratio_multiplier):
                 max_length, min_length, side_lengths = get_polygon_side_lengths(row['geometry'], ratio_multiplier)
                 xpos, ypos = get_nearest_position_to_origin(row['geometry'], ratio_multiplier)
                 create_stand(rxe, row['Display Name'], row['Stand: Stand Name'], xpos, ypos, row['Width'], row['Length'])#row['Length'], row['Width'])
+
 def load_stand_attribute_data(rxe, filename):
         file_path = os.path.join(settings.BASE_DIR, 'data', filename)
         if not os.path.exists(file_path):
@@ -46,6 +47,14 @@ def load_stand_attribute_data(rxe, filename):
 
     # Iterate through each row and create instances of event_sales_transactions
         for _, row in data.iterrows():
+                up, create = stands_attribute_data.objects.update_or_create(
+                        sad_event=rxe,
+                        sad_stand_name=row['Stand Name'],
+                        sad_title=row['Title'],
+                        sad_value=row['Value'],
+                        sad_data_type=row['Data Type'],
+                        sad_datetime=timezone.now(),)
+
 #                print(f"load_stand_attribute_data: {row}")
                 for st in stands.objects.filter(s_rx_event=rxe, s_number=row['Stand Name']):
 #                        print(f"load_stand_attribute_data: {st} {row['Stand Name']}")
@@ -173,6 +182,63 @@ def load_transaction_sales_data(rxe, filename):
                                 x.est_Last_Modified_Date, x.est_Total_Net_Amount, x.est_Order_Created_Date, x.est_Packages_Sold,
                                 x.est_Product_Name, x.est_Stand_Name_Cleaned, x.est_Stand_Name_Dim_Cleaned)
 
+def load_error_report_stand(rxe):
+        print(f"load_error_report_stand: {rxe}")
+        errors = []
+        #first - look for stands with no x, y, x_length, y_lenght attributes
+        for st_stand in stands.objects.filter(s_rx_event=rxe).order_by('s_number'):
+                x = stand_attributes_get_value(st_stand, None, 'Stand x')
+                y = stand_attributes_get_value(st_stand, None, 'Stand y')
+                x_length = stand_attributes_get_value(st_stand, None, 'Stand x length')
+                y_length = stand_attributes_get_value(st_stand, None, 'Stand y length')
+                if(x is None or y is None or x_length is None or y_length is None):
+                        errors.append([st_stand.s_number, "missing x, y, x_length, y_length attributes"])
+        #second - look for stands that occur twice in the data
+        duplicates = stands.objects.filter(s_rx_event=rxe).values('s_number').annotate(count=models.Count('s_number')).filter(count__gt=1)
+        for st_stand in duplicates:
+                errors.append([st_stand.s_number, "In stand file " + str(st_stand.count) + " times."])
+        if(len(errors) == 0):
+                errors.append(['No errors found', ''])
+        log_errors_to_file(str(rxe.re_name).replace(' ','_')+'_errors_stand_floorplan.csv', errors)
+def load_error_report_stand_attributes(rxe):
+        print(f"load_error_report_stand_attributes: {rxe}")
+        errors = []
+        #first - look for attributes that have a stand number that does not exist in the stands table
+        for st_attr in stands_attribute_data.objects.filter(sad_event=rxe).order_by('sad_stand_name'):
+                st_stand = stands.objects.filter(s_rx_event=rxe, s_number__iexact=st_attr.sad_stand_name.lower().strip())
+                if(len(st_stand) == 0):
+                        errors.append([st_attr.sa_number, "Stand number not found in stands table"])
+        #second - look for stands that have no attribute data
+        for st_stand in stands.objects.filter(s_rx_event=rxe).order_by('s_number'):
+                st_attr = stand_attributes.objects.filter(sa_stand=st_stand)
+                if(len(st_attr) == 0):
+                        errors.append([st_stand.s_number, "Stand has no attributes"])
+        if(len(errors) == 0):
+                errors.append(['No errors found', ''])
+        log_errors_to_file(str(rxe.re_name).replace(' ','_')+'_errors_stand_attributes.csv', errors)
+def load_error_report_sales_data(rxe):
+        print(f"load_error_report_stand_attributes: {rxe}")
+        errors = []
+        #first - look for sales data that have a stand number that does not exist in the stands table
+        for s_trans in event_sales_transactions.objects.filter(est_event = rxe).order_by('est_Stand_Name_Cleaned'):
+                if(s_trans.est_Stand_Name_Cleaned is not None):
+                        st_stand = stands.objects.filter(s_rx_event=rxe, s_number__iexact=s_trans.est_Stand_Name_Cleaned.lower().strip())
+                        if(len(st_stand) == 0):
+                                errors.append([s_trans.est_Stand_Name_Cleaned, "Stand number not found in sales transaction table"])
+                else:
+                        errors.append(['None', "No stand number given in Sales Transaction Table"])
+        #second - look for stand data in sales data multiple times
+        duplicates = event_sales_transactions.objects.filter(est_event=rxe).values('est_Stand_Name_Cleaned').annotate(count=models.Count('est_Stand_Name_Cleaned')).filter(count__gt=1)
+        for d in duplicates:
+                errors.append([d['est_Stand_Name_Cleaned'], "In sales transaction file " + str(d['count']) + " times."])
+        #third - look for stands with no sales data
+        for st_stand in stands.objects.filter(s_rx_event=rxe).order_by('s_number'):
+                st_attr = event_sales_transactions.objects.filter(est_event=rxe, est_Stand_Name_Cleaned=st_stand.s_number)
+                if(len(st_attr) == 0):
+                        errors.append([st_stand.s_number, "Stand has no sales data"])
+        if(len(errors) == 0):
+                errors.append(['No errors found', ''])
+        log_errors_to_file(str(rxe.re_name).replace(' ','_')+'_errors_sales_transactions.csv', errors)
 
 ###Only if need to extract from sales transactions
 def stand_attributes_temporary_extract_from_sales(rxe):
@@ -210,11 +276,11 @@ def create_stand_attributes_file_from_Sales_Data(rxe):
         write_stand_attributes_to_file(rxe)
 ###Only if need to extract from sales transactions
 
-
 def reset_test_data():
 #        f.write("reset tables: " + str(timezone.now()) + "\n")
         rx_event.objects.all().delete()
         event_sales_transactions.objects.all().delete()
+        stands_attribute_data.objects.all().delete()
         log_page_data.objects.all().delete()
         log_progress_data.objects.all().delete()
         log_messages.objects.all().delete()
@@ -254,15 +320,17 @@ def run(*args):
         load_floorplan_data(rxe, filename, ratio_multiplier)
         event_determine_floorplan_max_length_height(rxe)
 
-#        #Only do if need to recreate the stand attributes file
-#        rxe = get_event('ISC West 2025')
-#        create_stand_attributes_file_from_Sales_Data(rxe)
+####        #Only do if need to recreate the stand attributes file
+####        rxe = get_event('ISC West 2025')
+####        create_stand_attributes_file_from_Sales_Data(rxe)
 
         filename = 'ISC_West25_stand_attributes.xlsx'
         rxe = get_event('ISC West 2025')
         load_stand_attribute_data(rxe, filename)
 
-
+        load_error_report_stand(rxe)
+        load_error_report_stand_attributes(rxe)
+        load_error_report_sales_data(rxe)
 
 #        f.write("Complete: " + logs_filename + str(timezone.now()) + "\n")
 #        f.close()

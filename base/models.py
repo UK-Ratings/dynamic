@@ -88,6 +88,17 @@ class event_sales_transactions(models.Model):
     est_Packages_Sold = models.CharField("Packages Sold", max_length=300, blank=True, null=True, )
     est_Product_Name = models.CharField("Product Name", max_length=300, blank=True, null=True, )
 
+class stands_attribute_data(models.Model):
+    sad_event = models.ForeignKey(rx_event, blank=True, null=True, on_delete=models.CASCADE)
+    sad_stand_name = models.CharField("Stand Name", max_length=300, blank=True, null=True, )
+    sad_title = models.CharField("Stand Title", max_length=300, blank=True, null=True, )
+    sad_value = models.CharField("Stand Value", max_length=300, blank=True, null=True, )
+    sad_data_type = models.CharField("Stand Data Type", max_length=300, blank=True, null=True, )
+    sad_datetime = models.DateTimeField("Stand Date Time", blank=True, null=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=['sad_event','sad_stand_name','sad_title'], name='stands_attribute_data_index1'),
+            ]
 
 #remove s_stand_status and others???  Store in stand_attributes???
 class stands(models.Model):
@@ -95,28 +106,12 @@ class stands(models.Model):
     s_rx_event = models.ForeignKey(rx_event, blank=True, null=True, on_delete=models.CASCADE)
     s_name = models.CharField("stand name", max_length=300, blank=True, null=True, )
     s_number = models.CharField("stand number", max_length=300, blank=True, null=True, )
-    #Available, Sold, New Sell, Reserved, New Stand
-    s_stand_status = models.CharField("stand status", max_length=50, blank=True, null=True, )
-    #Base, Price Increase, Price Decrease 
-    s_stand_price = models.CharField("stand price", max_length=50, blank=True, null=True, )
-    s_stand_price_per_sq_ft = models.DecimalField("stand price per sq ft", max_digits=10, decimal_places=2, blank=True, null=True)
-    s_stand_price_gradient = models.IntegerField("stand price gradient", blank=True, null=True)
     class Meta:
         indexes = [
             models.Index(fields=['s_rx_event','s_number'], name='stand_index1'),
             models.Index(fields=['s_rx_event','s_name'], name='stand_index2'),
             ]
 
-class stand_location(models.Model):
-    sl_stand = models.ForeignKey(stands, blank=True, null=True, on_delete=models.CASCADE)
-    sl_x = models.IntegerField("stand x")
-    sl_y = models.IntegerField("stand y")
-    sl_x_length = models.IntegerField("stand x length")
-    sl_y_length = models.IntegerField("stand y length")
-    class Meta:
-        indexes = [
-            models.Index(fields=['sl_stand'], name='stand_location_index1'),
-        ]
 
 # will use these for identification and to match to the rules in time
 class stand_attributes(models.Model):

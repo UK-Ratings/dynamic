@@ -199,6 +199,17 @@ def create_mov_from_images(media_directory, output_filename):
     video.release()
     print(f"Video saved as {movie_filename}")
 
+def log_errors_to_file(filename, errors):
+#    for qq in errors:
+#        print(qq[0], qq[1])
+    logs_dir = os.path.join(settings.BASE_DIR, 'logs')
+    os.makedirs(logs_dir, exist_ok=True)
+    log_file_path = os.path.join(logs_dir, filename)
+
+    with open(log_file_path, 'w', encoding='utf-8') as log_file:
+        for error in errors:
+            log_file.write(f"{error}\n")
+
 
 def get_event(event_name):
         try:
