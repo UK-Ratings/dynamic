@@ -88,6 +88,19 @@ class event_sales_transactions(models.Model):
     est_Packages_Sold = models.CharField("Packages Sold", max_length=300, blank=True, null=True, )
     est_Product_Name = models.CharField("Product Name", max_length=300, blank=True, null=True, )
 
+class event_sales_transactions_grouped(models.Model):
+    estg_event = models.ForeignKey(rx_event, blank=True, null=True, on_delete=models.CASCADE)
+    estg_Stand_Area = models.CharField("Stand Area", max_length=300, blank=True, null=True, )
+    estg_Number_of_Corners = models.CharField("Number of Corners", max_length=300, blank=True, null=True, )
+    estg_Stand_Zone = models.CharField("Stand Zone", max_length=300, blank=True, null=True, )
+    estg_Floor_Plan_Sector = models.CharField("Floor Plan Sector", max_length=300, blank=True, null=True, )
+    estg_Packages_Sold = models.CharField("Packages Sold", max_length=300, blank=True, null=True, )
+    estg_count = models.IntegerField("Count", blank=True, null=True)
+    estg_min = models.FloatField("Min", blank=True, null=True)
+    estg_max = models.FloatField("Max", blank=True, null=True)
+    estg_avg = models.FloatField("Avg", blank=True, null=True)
+    estg_median = models.FloatField("Median", blank=True, null=True)
+
 class stands_attribute_data(models.Model):
     sad_event = models.ForeignKey(rx_event, blank=True, null=True, on_delete=models.CASCADE)
     sad_stand_name = models.CharField("Stand Name", max_length=300, blank=True, null=True, )

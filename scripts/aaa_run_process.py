@@ -4,6 +4,9 @@ import cv2
 import os
 import matplotlib.pyplot as plt
 import pandas as pd
+import csv
+import os
+
 
 from base.models import *
 from django.conf import settings
@@ -161,7 +164,7 @@ def run_event_year(rxe, create_images):
                         render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", run_id)
                 else:
                         for x in event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)):
-                                print(f"event_sales_transactions: {x.est_Order_Created_Date} {x.est_Stand_Name_Cleaned} {x.est_Company_Name}")
+#                                print(f"event_sales_transactions: {x.est_Order_Created_Date} {x.est_Stand_Name_Cleaned} {x.est_Company_Name}")
                                 record_log_data("aaa_run_process.py", "run_event_year", "working date: " + str(ev_date))
                                 for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
 #                                        s_stand_status = Available, Sold, New Sell, Reserved, New Stand
@@ -255,6 +258,39 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
 
         record_log_data("aaa_run_process.py", "run_event_monte_carlo_simulation", "completed...")
 
+
+def write_x_to_csv(x, filename):
+    logs_dir = os.path.join(settings.BASE_DIR, 'logs')
+    os.makedirs(logs_dir, exist_ok=True)
+    file_path = os.path.join(logs_dir, filename)
+
+    with open(file_path, 'a', newline='', encoding='utf-8') as csvfile:
+        writer = csv.writer(csvfile)
+        writer.writerow([
+                x.est_Company_Name,x.est_Recipient_Country,x.est_Customer_Type,x.est_Opportunity_Type,
+                x.est_Opportunity_Owner,x.est_Stand_Name_Length_Width,x.est_Stand_Name_Cleaned,x.est_Stand_Name_Dim_Cleaned,
+                x.est_Stand_Area,x.est_Number_of_Corners,x.est_Stand_Zone,x.est_Floor_Plan_Sector,
+                x.est_Sharer_Entitlements,x.est_Sharer_Companies,x.est_Last_Modified_Date,x.est_Total_Net_Amount,
+                x.est_Order_Created_Date,x.est_Packages_Sold,x.est_Product_Name
+            ])
+
+def run_analysis(rxe):
+        group_and_calculate_square_foot_prices(rxe)
+#        run_id = 0
+#        for fs in stands.objects.filter(s_rx_event=rxe):
+#                sav = stand_attributes_get_value(fs, None, 'Stand Zone')
+#                if(sav == 'Standard 3'):
+##                        print(f"stands: {fs.s_number} {sav}")
+#                        st_attr = event_sales_transactions.objects.filter(est_event=rxe, est_Stand_Name_Cleaned=fs.s_number)
+#                        for x in st_attr:
+#              #                  print(f"event_sales_transactions: {x}")
+#                                write_x_to_csv(x, 'sales_transactions.csv')
+
+
+
+
+
+
 def run(*args):
 
         db_host_name = str(settings.DATABASES['default']['HOST'])
@@ -267,18 +303,18 @@ def run(*args):
         image_length, image_height, image_margin, header_space, footer_space, image_multiplier, image_multiplier_small, static_floorplan_loc, static_analysis_loc = get_env_values()
         erase_files_in_dir(static_floorplan_loc)
 
-        for x in stands.objects.all():
-                stand_analysis.objects.filter(sa_stand=x).delete()
-                stand_attributes_record(x, None, 'Stand Status', 'Available', 'string', timezone.now())
-                stand_attributes_record(x, None, 'Stand Price', 'Base', 'string', timezone.now())
-                stand_attributes_record(x, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
-        filename = 'ISC_West25_stand_attributes.xlsx'
-        rxe = get_event('ISC West 2025')
-        load_stand_attribute_data(rxe, filename)
+#        for x in stands.objects.all():
+#                stand_analysis.objects.filter(sa_stand=x).delete()
+#                stand_attributes_record(x, None, 'Stand Status', 'Available', 'string', timezone.now())
+#                stand_attributes_record(x, None, 'Stand Price', 'Base', 'string', timezone.now())
+#                stand_attributes_record(x, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
+#        filename = 'ISC_West25_stand_attributes.xlsx'
+#        rxe = get_event('ISC West 2025')
+#        load_stand_attribute_data(rxe, filename)
 
 
         record_log_data("aaa_run_process.py", "run", "starting... reset data")
-#        aaa_reset_and_load.run()
+        aaa_reset_and_load.run()
         record_log_data("aaa_run_process.py", "run", "completed... load data")
 
         event_name = "ISC West 2025"
@@ -289,9 +325,10 @@ def run(*args):
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-        run_event_year(rx_event, False)
+        run_event_year(rx_event, True)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
+        run_analysis(rx_event)
 
 #        if(rx_event is not None):
 #                pricing_rules.objects.filter(prb_event = rx_event).delete()
@@ -310,26 +347,7 @@ def run(*args):
 #                        run_event_monte_carlo_simulation(rx_event, r, False)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-#        stand_analysis_price(event_name)
-#        build_stand_gradient('ISC West 2025')
-#        record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-#        run_event_year(rx_event, False)
-#        record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
-
-#        create_mov_from_images('floorplans', 'output.mp4')
+        create_mov_from_images('floorplans', 'output.mp4')
 
 #        f.write("Complete: " + logs_filename + str(timezone.now()) + "\n")
 #        f.close()

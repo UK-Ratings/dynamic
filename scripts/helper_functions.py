@@ -11,6 +11,9 @@ from django.utils.translation import get_language
 from dotenv import load_dotenv
 from base.models import *
 from users.models import *
+from django.db.models.functions import Cast
+from django.db.models import FloatField, Count, Sum, IntegerField
+import statistics
 
 
 
@@ -220,3 +223,144 @@ def get_event(event_name):
         return rxe
 
 
+
+
+def group_and_calculate_square_foot_prices(rxe):
+#'est_Stand_Area','est_Number_of_Corners','est_Stand_Zone','est_Floor_Plan_Sector','est_Packages_Sold'
+
+        event_sales_transactions_grouped.objects.all().delete()
+        transactions = event_sales_transactions.objects.filter(est_event=rxe)
+#        print(f"First Transactions count: {transactions.count()}")
+        transactions = event_sales_transactions.objects.filter(est_event=rxe
+                ).exclude(est_Total_Net_Amount=0
+                ).exclude(est_Stand_Area=0
+                ).exclude(est_Stand_Area__isnull=True
+                ).exclude(est_Stand_Area__exact=''
+                ).exclude(est_Stand_Area__icontains=','
+                ).exclude(est_Stand_Name_Cleaned__icontains=','
+                ).exclude(est_Floor_Plan_Sector__icontains=','
+                ).exclude(est_Packages_Sold__icontains=',')
+#        print(f"After exclusions Transactions count: {transactions.count()}")
+
+        grouped_data = transactions.values(
+                'est_Stand_Area',
+                'est_Number_of_Corners',
+                'est_Stand_Zone',
+                'est_Floor_Plan_Sector',
+#                'est_Packages_Sold'
+                ).annotate(
+                count=Count('id'),
+                ).order_by(
+                'est_Stand_Area',
+                'est_Number_of_Corners',
+                'est_Stand_Zone',
+                'est_Floor_Plan_Sector',
+#                'est_Packages_Sold'
+                )
+#        print(f"Grouped data count: {grouped_data.count()}")
+    
+        for qq in grouped_data:
+               up, created = event_sales_transactions_grouped.objects.update_or_create(
+                          estg_Stand_Area=qq['est_Stand_Area'],
+                          estg_Number_of_Corners=qq['est_Number_of_Corners'],
+                          estg_Stand_Zone=qq['est_Stand_Zone'],
+                          estg_Floor_Plan_Sector=qq['est_Floor_Plan_Sector'],
+#                          estg_Packages_Sold=qq['est_Packages_Sold'],
+                          defaults={
+                                   'estg_count': Cast(qq['count'], IntegerField()),
+                                   'estg_min': Cast(0, FloatField()),
+                                   'estg_max': Cast(0, FloatField()),
+                                   'estg_avg': Cast(0, FloatField()),
+                                   'estg_median': Cast(0, FloatField())
+                                   }
+                          )
+        estg = event_sales_transactions_grouped.objects.all().count(),
+#        print(f"Grouped data count: {estg}")
+
+        for estg in event_sales_transactions_grouped.objects.all():
+                min_sq_price = 0
+                max_sq_price = 0
+                avg_sq_price = 0
+                median_sq_price = 0
+                est = event_sales_transactions.objects.filter(
+                        est_event=rxe,
+                        est_Stand_Area=estg.estg_Stand_Area,
+                        est_Number_of_Corners=estg.estg_Number_of_Corners,
+                        est_Stand_Zone=estg.estg_Stand_Zone,
+                        est_Floor_Plan_Sector=estg.estg_Floor_Plan_Sector,
+#                        est_Packages_Sold=estg.estg_Packages_Sold
+                        ).annotate(                       
+                                est_price =  Cast(0, FloatField()),
+                                est_sq_price =  Cast(0, FloatField())
+#                        sq_price=(Cast(float('est_Total_Net_Amount') / float('est_Stand_Area')), FloatField())
+                        ).exclude(est_Total_Net_Amount=0
+                        ).exclude(est_Stand_Area=0
+                        ).exclude(est_Stand_Area__isnull=True
+                        ).exclude(est_Stand_Area__exact=''
+                        ).exclude(est_Stand_Name_Cleaned__icontains=',')
+                for ee in est:
+                        try:
+                                tna = float(ee.est_Total_Net_Amount) 
+                        except:
+                                tna = 0
+                        try:
+                                float(ee.est_Stand_Area)
+                        except:
+                                sqp = 0
+                        else:
+                                sqp = float(ee.est_Total_Net_Amount) / float(ee.est_Stand_Area)
+                        ee.est_prices = tna
+                        ee.est_sq_prices = sqp
+                        ee.save
+
+#                print(f"estg count: {estg.estg_count} est count: {est.count()}")
+#                for qqq in est:
+#                       print(f"{qqq.est_Total_Net_Amount} {qqq.est_Stand_Area} estg est: {qqq.est_prices} {qqq.est_sq_prices}")
+                min_sq_price = min([qqq.est_sq_prices for qqq in est])
+                max_sq_price = max([qqq.est_sq_prices for qqq in est])
+                avg_sq_price = statistics.mean([qqq.est_sq_prices for qqq in est])
+                median_sq_price = statistics.median([qqq.est_sq_prices for qqq in est])
+                try:
+                       float(min_sq_price)
+                except ValueError:
+                       min_sq_price = 0.0
+                try:
+                       float(max_sq_price)
+                except ValueError:
+                       max_sq_price = 0.0
+                try:
+                       float(avg_sq_price)
+                except  ValueError:
+                       avg_sq_price = 0.0
+                try:
+                       float(median_sq_price)
+                except ValueError:
+                       median_sq_price = 0.0
+                if(str(min_sq_price) == 'nan'):
+                       min_sq_price = 0
+                if(str(max_sq_price) == 'nan'):
+                       max_sq_price = 0
+                if(str(avg_sq_price) == 'nan'):
+                       avg_sq_price = 0
+                if(str(median_sq_price) == 'nan'):
+                       median_sq_price = 0
+#                print(f"min_sq_price: {min_sq_price} max_sq_price: {max_sq_price} avg_sq_price: {avg_sq_price} median_sq_price: {median_sq_price}")
+                estg.estg_min = min_sq_price
+                estg.estg_max = max_sq_price
+                estg.estg_avg = avg_sq_price
+                estg.estg_median = median_sq_price
+
+                estg.save()
+
+#                print(event_sales_transactions_grouped.objects.all().count())
+        estg_recs = []
+        for tt in event_sales_transactions_grouped.objects.all().order_by('estg_Stand_Zone', 'estg_Floor_Plan_Sector', 'estg_Stand_Area', 'estg_Number_of_Corners',):
+#                estg_recs.append([tt.estg_Stand_Area, tt.estg_Number_of_Corners, tt.estg_Stand_Zone, tt.estg_Floor_Plan_Sector,
+#                        tt.estg_Packages_Sold, tt.estg_count, tt.estg_min, tt.estg_max, tt.estg_avg, tt.estg_median])
+                estg_recs.append([tt.estg_Stand_Area, tt.estg_Number_of_Corners, tt.estg_Stand_Zone, tt.estg_Floor_Plan_Sector,
+                        tt.estg_count, tt.estg_min, tt.estg_max, tt.estg_avg, tt.estg_median])
+                estg_recs.sort(key=lambda x: (x[0], x[1], x[2], x[3]))
+        log_errors_to_file(str(rxe.re_name).replace(' ','_')+'_actual_price_groupings.csv', estg_recs)
+
+#HERE - Don't need packages_sold, just the other 4 fields
+#SEEMS TO BE PRICE INCREASES

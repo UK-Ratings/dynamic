@@ -9,21 +9,11 @@ from pandas._libs.tslibs.nattype import NaTType
 import datetime
 import csv
 
-#from django.contrib import messages
-#from django.db.models import Max
-#import numpy as np
-#import random
-
-
 from base.models import *
-#from scripts.helper_functions import *
 from scripts.helper_functions_render import *
-#from scripts.helper_functions_stand import *
 from scripts.helper_functions_event import *
 
-
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
-
 
 def load_floorplan_data(rxe, filename, ratio_multiplier):
         file_path = os.path.join(settings.BASE_DIR, 'data', filename)
@@ -37,7 +27,6 @@ def load_floorplan_data(rxe, filename, ratio_multiplier):
                 max_length, min_length, side_lengths = get_polygon_side_lengths(row['geometry'], ratio_multiplier)
                 xpos, ypos = get_nearest_position_to_origin(row['geometry'], ratio_multiplier)
                 create_stand(rxe, row['Display Name'], row['Stand: Stand Name'], xpos, ypos, row['Width'], row['Length'])#row['Length'], row['Width'])
-
 def load_stand_attribute_data(rxe, filename):
         file_path = os.path.join(settings.BASE_DIR, 'data', filename)
         if not os.path.exists(file_path):
@@ -276,10 +265,12 @@ def create_stand_attributes_file_from_Sales_Data(rxe):
         write_stand_attributes_to_file(rxe)
 ###Only if need to extract from sales transactions
 
+
 def reset_test_data():
 #        f.write("reset tables: " + str(timezone.now()) + "\n")
         rx_event.objects.all().delete()
         event_sales_transactions.objects.all().delete()
+        event_sales_transactions_grouped.objects.all().delete()
         stands_attribute_data.objects.all().delete()
         log_page_data.objects.all().delete()
         log_progress_data.objects.all().delete()
@@ -334,6 +325,4 @@ def run(*args):
 
 #        f.write("Complete: " + logs_filename + str(timezone.now()) + "\n")
 #        f.close()
- 
 
-#python manage.py runscript aaa_reset_and_load
