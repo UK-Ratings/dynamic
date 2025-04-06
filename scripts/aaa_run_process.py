@@ -12,6 +12,7 @@ from django.contrib import messages
 from django.utils.translation import get_language
 from dotenv import load_dotenv
 from datetime import datetime
+from django.db.models import Count
 
 from base.models import *
 from users.models import *
@@ -32,61 +33,106 @@ from scripts.aaa_reset_and_load import load_stand_attribute_data
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "project.settings.local")
 
 
-def zzzzbuild_sale_analysis(sales_t, st_info, run_id):
-        analysis_set = []
 
-        analysis_set.append(["Stand: "+str(sales_t.est_Stand_Name_Cleaned) + "-" , 'center', 'top'])
-        analysis_set.append(["Company Name: " + str(sales_t.est_Company_Name), 'left', 'top'])
-        analysis_set.append(["Origin Country: " + str(sales_t.est_Recipient_Country), 'left', 'top'])
-        analysis_set.append(["Customer Type: " + str(sales_t.est_Customer_Type), 'left', 'top'])
-        analysis_set.append(["Opportunity Type: " + str(sales_t.est_Opportunity_Type), 'left', 'top'])
-        analysis_set.append(["Opportunity Owner: " + str(sales_t.est_Opportunity_Owner), 'left', 'top'])
-        analysis_set.append([str(sales_t.est_Stand_Name_Length_Width), 'left', 'top'])
-        analysis_set.append(["Stand Name: " + str(sales_t.est_Stand_Name_Cleaned), 'left', 'top'])
-        analysis_set.append(["Stand Dimenstions: " + str(sales_t.est_Stand_Name_Dim_Cleaned), 'left', 'top'])
-        analysis_set.append(["Stand Area: " + str(sales_t.est_Stand_Area), 'left', 'top'])
-        analysis_set.append(["Stand Corners: " + str(sales_t.est_Number_of_Corners), 'left', 'top'])
-        analysis_set.append(["Stand Zone: " + str(sales_t.est_Stand_Zone), 'left', 'top'])
-        analysis_set.append(["Stand Sector: " + str(sales_t.est_Floor_Plan_Sector), 'left', 'top'])
-        analysis_set.append(["Stand Sharer Entitlements: " + str(sales_t.est_Sharer_Entitlements), 'left', 'top'])
-        analysis_set.append(["Stand Sharer Companies: " + str(sales_t.est_Sharer_Companies), 'left', 'top'])
-        analysis_set.append(["Modified Date: " + str(sales_t.est_Last_Modified_Date), 'left', 'top'])
-        analysis_set.append(["Total Net Amount: " + str(sales_t.est_Total_Net_Amount), 'left', 'top'])
-        analysis_set.append(["Order Created Date: " + str(sales_t.est_Order_Created_Date), 'left', 'top'])
-        analysis_set.append(["Packages Sold: " + str(sales_t.est_Packages_Sold), 'left', 'top'])
+def run_event_start(rxe, create_images):
+        record_log_data("aaa_run_process.py", "run_event_start", "starting...")
 
-        analysis_set.append(["Products Sold", 'left', 'top'])
-        p_name = sales_t.est_Product_Name.split(",")
-        for q in p_name:
-                analysis_set.append(["   " + str(q), 'left', 'top'])
+        run_id = 0
+        analysis_set_top = []
+        analysis_set_bottom = []
+        st_date = rxe.re_event_start_date
+        end_date = rxe.re_event_end_date#timezone.make_aware(datetime(2024, 3, 30, 0, 0, 0, 0))
+        image_length, image_height, image_margin, header_space, footer_space, image_multiplier, image_multiplier_small, static_floorplan_loc, static_analysis_loc = get_env_values()
 
-        mc = False
-        stand_analysis_recs = stand_get_all_analysis_records(st_info, run_id)
-        if(len(stand_analysis_recs) == 0):
-                stand_analysis_price_apply_monte_carlo(sales_t, st_info, run_id)
-                stand_analysis_recs = stand_get_all_analysis_records(st_info, run_id)
-                mc = True
+        header_set = []
+        header_set.append([rxe.re_name, 'center', 'top'])
+        header_set.append(["Las Vegas, NV", 'center', 'top'])
+        header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
-        if(len(stand_analysis_recs) > 0):
-                analysis_set.append([" ", 'left', 'top'])
-                if(mc):
-                        analysis_set.append(["Monte Carlo Stand Analysis", 'left', 'top'])
-                else:
-                        analysis_set.append(["Stand Analysis", 'left', 'top'])
-                analysis_set.append([" ", 'left', 'top'])
-                for q in stand_analysis_recs:
-                        if(q[1] == 'MC Rules Applied'):
-                                cut_it = q[2].split(",")
-                                analysis_set.append([" ", 'left', 'top'])
-                                analysis_set.append(["Monte Carlo Rules Applied", 'left', 'top'])
-                                for q2 in cut_it:
-                                        analysis_set.append([str(q2), 'left', 'top'])
-                        else:
-                                analysis_set.append([str(q[1]+": "+str(q[2])), 'left', 'top'])
-        return(analysis_set)
+        if(1==1):#first - straight floor plan
+                for fs in stands.objects.filter(s_rx_event=rxe):
+                        stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "100", "integer")
+                footer_set = []
+                message_set = []
+                footer_set.append(["Initial Stands", 'center', 'top'])
+                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+        if(1==1):#second - now with sold stands
+                st_count = 0
+                for fs in stands.objects.filter(s_rx_event=rxe):
+                        stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
+                        stand_attributes_record(fs, None, 'Stand Price Gradient', "100", 'integer', timezone.now())
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "100", "integer")
+                for fs in stands.objects.filter(s_rx_event=rxe):
+                        for x in event_sales_transactions.objects.filter(est_event = rxe,est_Stand_Name_Cleaned__iexact = fs.s_number.lower().strip()):
+                                stand_attributes_record(fs, None, 'Stand Status', 'Sold', 'string', timezone.now())
+                                st_count = st_count + 1
+                footer_set = []
+                message_set = []
+                footer_set.append(["Sold Stands: "+str(st_count), 'center', 'top'])
+                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+        if(1==1):#third - stands missing in sales data
+                st_count = 0
+                for fs in stands.objects.filter(s_rx_event=rxe):
+                        stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
+                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "1", "integer")
+                for fs in stands.objects.filter(s_rx_event=rxe):
+                        est = event_sales_transactions.objects.filter(est_event = rxe,est_Stand_Name_Cleaned__iexact = fs.s_number.lower().strip())
+                        if(len(est) == 0):
+                                stand_attributes_record(fs, None, 'Stand Status', 'Sold', 'string', timezone.now())
+                                st_count = st_count + 1
+                footer_set = []
+                message_set = []
+                footer_set.append(["Stands with no sales data: "+str(st_count), 'center', 'top'])
+                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+        if(1==1):#fourth - stands missing net sales data
+                st_count = 0
+                for fs in stands.objects.filter(s_rx_event=rxe):
+                        stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
+                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "1", "integer")
+                for fs in stands.objects.filter(s_rx_event=rxe):
+                        for ee in event_sales_transactions.objects.filter(est_event = rxe,est_Stand_Name_Cleaned__iexact = fs.s_number.lower().strip()):
+                                if((ee.est_Total_Net_Amount is None) or (float(ee.est_Total_Net_Amount) == 0)):
+                                        stand_attributes_record(fs, None, 'Stand Status', 'Sold', 'string', timezone.now())
+                                        st_count = st_count + 1
+                footer_set = []
+                message_set = []
+                footer_set.append(["Stands with net revenue data: "+str(st_count), 'center', 'top'])
+                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+        if(1==1):#last - no for each stand attribute
+                for fs in stands.objects.filter(s_rx_event=rxe):
+                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "100", "integer")
+                sad = stands_attribute_data.objects.filter(sad_event=rxe).values('sad_title', 'sad_value').annotate(count=Count('sad_value'))
+                for x in sad:
+                        st_count = 0
+                        for fs in stands.objects.filter(s_rx_event=rxe):
+                                stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
+#                        print(f"stands_attribute_data: {x['sad_title']} {x['sad_value']} {x['count']}")
+                        for fss in stands.objects.filter(s_rx_event=rxe):
+                                attr = stand_attributes_get_value(fss, None, x['sad_title'])
+                                if(attr is not None):
+                                        if(type(attr) == int):
+                                                sv = int(x['sad_value'])
+                                        elif(type(attr) == float):
+                                                sv = float(x['sad_value'])
+                                        elif (type(attr) == str):
+                                                sv = str(x['sad_value'])
+                                        if(attr == sv):
+                                                stand_attributes_record(fss, None, 'Stand Status', 'Sold', 'string', timezone.now())
+                                                st_count = st_count + 1
+                        footer_set = []
+                        message_set = []
+                        footer_set.append([str(x['sad_title'])+": " + str(x['sad_value']) + "--> Stands: "+str(st_count), 'center', 'top'])
+                        render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+        record_log_data("aaa_run_process.py", "run_event_start", "completed...")
 
 def run_event_year(rxe, create_images):
         record_log_data("aaa_run_process.py", "run_event_year", "starting...")
+        for fs in stands.objects.filter(s_rx_event=rxe):
+                stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
 
         run_id = 0
         stand_analysis_price(rxe, run_id)
@@ -148,7 +194,6 @@ def run_event_year(rxe, create_images):
         render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Final", run_id)
 
         record_log_data("aaa_run_process.py", "run_event_year", "completed...")
-
 
 def run_event_monte_carlo_simulation(rxe, p_number, create_images):
         record_log_data("aaa_run_process.py", "run_event_monte_carlo_simulation", "starting...")
@@ -227,10 +272,6 @@ def run(*args):
                 stand_attributes_record(x, None, 'Stand Status', 'Available', 'string', timezone.now())
                 stand_attributes_record(x, None, 'Stand Price', 'Base', 'string', timezone.now())
                 stand_attributes_record(x, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
-#                x.s_stand_status = 'Available' 
-#                x.s_stand_price = 'Base'
-#                x.s_stand_price_gradient = random.randint(0, 100)
-#                x.save()
         filename = 'ISC_West25_stand_attributes.xlsx'
         rxe = get_event('ISC West 2025')
         load_stand_attribute_data(rxe, filename)
@@ -244,25 +285,43 @@ def run(*args):
         rx_event = get_event(event_name)
 
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
+        run_event_start(rx_event, False)
+        record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
+
+        record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
         run_event_year(rx_event, False)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
 
-        if(rx_event is not None):
-                pricing_rules.objects.filter(prb_event = rx_event).delete()
-                load_pr(rx_event)
+#        if(rx_event is not None):
+#                pricing_rules.objects.filter(prb_event = rx_event).delete()
+#                load_pr(rx_event)
 
-#                recs = pricing_rules_get_all_data(rx_event, 0)
-#                for q in recs:
-#                        print(q)
+##                recs = pricing_rules_get_all_data(rx_event, 0)
+##                for q in recs:
+##                        print(q)
 
-                for r in range(1, 2):
-                        print("Pricing Rule Base: " + str(r))
-                        pricing_copy_base(rx_event, r)
-#                        recs = pricing_rules_get_all_data(rx_event, r)
-#                        for q in recs:
-#                                print(q)
-                        run_event_monte_carlo_simulation(rx_event, r, False)
+#                for r in range(1, 2):
+#                        print("Pricing Rule Base: " + str(r))
+#                        pricing_copy_base(rx_event, r)
+##                        recs = pricing_rules_get_all_data(rx_event, r)
+##                        for q in recs:
+##                                print(q)
+#                        run_event_monte_carlo_simulation(rx_event, r, False)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 #        stand_analysis_price(event_name)
 #        build_stand_gradient('ISC West 2025')

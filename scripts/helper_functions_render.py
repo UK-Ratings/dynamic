@@ -406,11 +406,11 @@ def floorplan_new_place_stands(rxe, fig, ax, image_multiplier, fl_div, run_id):
                         text_color = get_color('unsold stand text color')
                 if(st_status == 'Sold'):
                         stand_fill_color = get_gradient_color(spg)
-                        stand_outline_color = get_gradient_color(spg)
+                        stand_outline_color = get_color('sold stand outline color')
                         text_color = get_color('sold stand text color')
                 if(st_status == 'New Sell'):
                         stand_fill_color = get_gradient_color(spg)
-                        stand_outline_color = get_gradient_color(spg)
+                        stand_outline_color = get_color('sold stand outline color')
                         text_color = get_color('sold stand text color')
                         circle_fill_color = get_color('sold stand circle fill color')
                         circle_outline_color = get_color('sold stand circle outline color')
