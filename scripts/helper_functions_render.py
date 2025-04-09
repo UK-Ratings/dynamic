@@ -230,6 +230,7 @@ def new_place_circle(sq, x, y, xlen, ylen, fill_color, edge_color, fl_div, line_
     return sq
 def new_place_rectangle(fig, sq, x, y, xlen, ylen, image_multiplier, fill_color, edge_color, sq_text, sq_text_color, fl_div, line_width, max_text_size, text_bottom_up, top_section_percent):
         rect = patches.Rectangle((x*fl_div, y*fl_div), xlen*fl_div, ylen*fl_div, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
+#        rect = patches.Rectangle((x, y), xlen, ylen, linewidth=line_width, edgecolor=edge_color, facecolor=fill_color)
         sq.add_patch(rect)
         if (sq_text is not None) and (len(sq_text) > 0):
                 title_str = sq_text[0][0]
@@ -512,38 +513,45 @@ def create_sold_info_subplot(fig, gs, image_margin, header_space, footer_space, 
         return(fig)
 
 def floorplan_subplot(rxe, fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floorplan_length, floorplan_height, run_id):
-        potential_plot_height = (image_height - (image_margin*2) - header_space - footer_space) * image_multiplier
-        potential_plot_length = (image_length - (image_margin*2)) * image_multiplier
-        height_div = (potential_plot_height / floorplan_height)
-        length_div = (potential_plot_length / floorplan_length)
-        fl_div = min(height_div, length_div)
+    potential_plot_height = (image_height - (image_margin*4) - header_space - footer_space) * image_multiplier
+    potential_plot_length = (image_length - (image_margin*2)) * image_multiplier
+    height_div = (potential_plot_height / floorplan_height)
+    length_div = (potential_plot_length / floorplan_length)
+    fl_div = min(height_div, length_div)
 
-        ax_height = int(floorplan_height * fl_div)
-        ax_width = int(floorplan_length * fl_div)
-        ax_upper_x = int(((image_length*image_multiplier) - ax_width) / 2)
-        ax_upper_y = int((image_margin + header_space) * image_multiplier)
+    # Calculate bounding box for all squares
+    all_stands = stands.objects.filter(s_rx_event=rxe)
+    min_x = min(stand_attributes_get_value(st, None, 'Stand x') for st in all_stands)
+    min_y = min(stand_attributes_get_value(st, None, 'Stand y') for st in all_stands)
+    max_x = max(stand_attributes_get_value(st, None, 'Stand x') + stand_attributes_get_value(st, None, 'Stand x length') for st in all_stands)
+    max_y = max(stand_attributes_get_value(st, None, 'Stand y') + stand_attributes_get_value(st, None, 'Stand y length') for st in all_stands)
+#    print(f"min_x: {min_x}, min_y: {min_y}, max_x: {max_x}, max_y: {max_y}")
 
+    ax_width = int((max_x - min_x) * fl_div)
+    ax_height = int((max_y - min_y) * fl_div)
+    ax_upper_x = int(((image_length * image_multiplier) - ax_width) / 2)
+    ax_upper_y = int(((image_margin*2) + (header_space)) * image_multiplier)
 
-        ax = fig.add_subplot(gs[ax_upper_y:ax_upper_y+ax_height, ax_upper_x:ax_upper_x+ax_width])  # Use the entire grid for the main plot
-#        print_ax_size(fig, gs, ax, "create_floorplan_subplot")
+    ax = fig.add_subplot(gs[ax_upper_y:ax_upper_y+ax_height, ax_upper_x:ax_upper_x+ax_width])
 
-        # Set the limits of the plot
-        ax.set_xlim(0, ax_width)
-        ax.set_ylim(0, ax_height)
-        ax.axis('off')
-        test_text = None
-        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, 
-                         image_multiplier, '#ffffff', '#000000', None, '#000000', 1, 3, 100, True, 0.4)
+    # Set the limits of the plot to zoom in on the bounding box
+    ax.set_xlim(min_x * fl_div, max_x * fl_div)
+    ax.set_ylim(min_y * fl_div, max_y * fl_div)
+    ax.axis('off')
 
-        ax = floorplan_new_place_stands(rxe, fig, ax, image_multiplier, fl_div, run_id)
-        return(fig)
+    ax = new_place_rectangle(fig, ax, int(min_x * fl_div), int(min_y * fl_div), int((max_x - min_x) * fl_div), int((max_y - min_y) * fl_div), 
+                         image_multiplier, '#ffffff', '#ffffff', None, '#000000', 1, 3, 100, True, 0.4)
+
+    ax = floorplan_new_place_stands(rxe, fig, ax, image_multiplier, fl_div, run_id)
+    return(fig)
+
 def render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, floorplan_type, run_id):
         record_log_data("aaa_helper_functions.py", "run_event_year", "starting: event name: " + str(rxe.re_name))
 
         st_timezone = timezone.now()
         cdatetime = str(st_timezone).replace(" ", "").replace(":", "").replace("+", "")
         footer_set.append([cdatetime + '.png', 'left', 'top'])
-        floor_length = rxe.re_floor_length
+        floor_length = rxe.re_floor_length 
         floor_height = rxe.re_floor_height
 
         image_length, image_height, image_margin, header_space, footer_space, im_multi, im_multi_sm, static_floorplan_loc, static_analysis_loc = get_env_values()

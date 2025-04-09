@@ -77,10 +77,10 @@ def event_calculate_avg_sq_price(event_name):
                         min_price = 1
                 print(f"Average sq price: {average_sq_price}, stand_count: {stand_count}, Max Price: {max_price} Min Price: {min_price}")
 def event_determine_floorplan_max_length_height(rxe):
-        min_x_length = 0
-        min_y_length = 0
-        max_x_length = 0
-        max_y_length = 0
+        min_x = 9999999999
+        min_y = 9999999999
+        max_x = -9999999999
+        max_y = -9999999999
 
         for st in stands.objects.filter(s_rx_event=rxe):
                 sl_x= stand_attributes_get_value(st, None, 'Stand x')
@@ -88,6 +88,34 @@ def event_determine_floorplan_max_length_height(rxe):
                 sl_x_length= stand_attributes_get_value(st, None, 'Stand x length')
                 sl_y_length= stand_attributes_get_value(st, None, 'Stand y length')
 
+#                print(f"sl_x: {sl_x}, sl_y: {sl_y}, sl_x_length: {sl_x_length}, sl_y_length: {sl_y_length}")
+                if(sl_x < min_x):
+                        min_x = sl_x
+                if(sl_y < min_y):
+                        min_y = sl_y   
+                if(sl_x + sl_x_length > max_x):
+                        max_x = sl_x + sl_x_length
+                if(sl_y + sl_y_length > max_y):
+                        max_y = sl_y + sl_y_length
+        max_x_length = max_x - min_x
+        max_y_length = max_y - min_y
+#        print("event_determine_floorplan_max_length_height max_x_length: ", max_x_length, "max_y_length: ", max_y_length)
+        event_update_length_height(rxe, abs(max_x_length), abs(max_y_length))
+
+
+def zzzevent_determine_floorplan_max_length_height(rxe):
+        min_x_length = 9999999999
+        min_y_length = 9999999999
+        max_x_length = -9999999999
+        max_y_length = -9999999999
+
+        for st in stands.objects.filter(s_rx_event=rxe):
+                sl_x= stand_attributes_get_value(st, None, 'Stand x')
+                sl_y= stand_attributes_get_value(st, None, 'Stand y')
+                sl_x_length= stand_attributes_get_value(st, None, 'Stand x length')
+                sl_y_length= stand_attributes_get_value(st, None, 'Stand y length')
+
+                print(f"sl_x: {sl_x}, sl_y: {sl_y}, sl_x_length: {sl_x_length}, sl_y_length: {sl_y_length}")
                 if(sl_x < min_x_length):
                         min_x_length = sl_x + sl_x_length
                 if(sl_y < min_y_length):
@@ -96,5 +124,6 @@ def event_determine_floorplan_max_length_height(rxe):
                         max_x_length = sl_x + sl_x_length
                 if(sl_y + sl_y_length > max_y_length):
                         max_y_length = sl_y + sl_y_length
-#        print("min_x_length: ", min_x_length, "min_y_length: ", min_y_length, "max_x_length: ", max_x_length, "max_y_length: ", max_y_length)
-        event_update_length_height(rxe, abs(min_x_length)+abs(max_x_length), abs(min_y_length)+abs(max_y_length))
+        print("min_x_length: ", min_x_length, "min_y_length: ", min_y_length, "max_x_length: ", max_x_length, "max_y_length: ", max_y_length)
+        event_update_length_height(rxe, abs(max_x_length)+abs(min_x_length), abs(max_y_length)+abs(min_y_length))
+
