@@ -36,11 +36,14 @@ def load_stand_attribute_data(rxe, filename):
 
     # Iterate through each row and create instances of event_sales_transactions
         for _, row in data.iterrows():
+                sv = row['Value']
+                if str(sv).lower() == 'nan':
+                        sv = 'Not Given'
                 up, create = stands_attribute_data.objects.update_or_create(
                         sad_event=rxe,
                         sad_stand_name=row['Stand Name'],
                         sad_title=row['Title'],
-                        sad_value=row['Value'],
+                        sad_value=sv,#row['Value'],         #nan's here
                         sad_data_type=row['Data Type'],
                         sad_datetime=timezone.now(),)
 

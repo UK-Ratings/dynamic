@@ -394,9 +394,8 @@ def floorplan_new_place_stands(rxe, fig, ax, image_multiplier, fl_div, run_id):
                 sl_y = stand_attributes_get_value(st, None, 'Stand y')
                 sl_x_length = stand_attributes_get_value(st, None, 'Stand x length')
                 sl_y_length = stand_attributes_get_value(st, None, 'Stand y length')
-#        for x in stand_location.objects.filter(sl_stand__s_rx_event__re_name__iexact='ISC West 2025'):
                 #Available, Sold, New Sell, Reserved, New Stand
-                sa_analysis_number, sa_analysis_title, spg = stand_get_analysis_record(st, run_id, None, 'Sq Foot Gradient')
+                sa_analysis_number, sa_analysis_title, spg = stand_get_analysis_record(st, run_id, None, 'Sq Gradient')
 #                print(f"sa_analysis_number: {sa_analysis_number}, sa_analysis_title: {sa_analysis_title}, spg: {spg}")
                 if(spg is None):
                         spg = 0
@@ -432,17 +431,22 @@ def floorplan_new_place_stands(rxe, fig, ax, image_multiplier, fl_div, run_id):
                 if(sl_x_length * sl_y_length > 1):
                         new_stand = []
                         if(st_status in ('Sold', 'New Sell')):
-                                if(st.s_name is not None and len(st.s_name) > 0):
-                                        new_stand.append([str(st.s_name), 'center', 'top'])
+                                if(st.s_number is not None and len(st.s_number) > 0):
+                                        new_stand.append([str(st.s_number), 'center', 'top'])
                                 else:
-                                        new_stand.append(['No Name Given', 'center', 'top'])
+                                        new_stand.append(['Missing Stand Number', 'center', 'top'])
+                                new_stand.append(["Name: " + str(st.s_name), 'left', 'top'])
+                                new_stand.append(["Stand Price: "+str(stand_attributes_get_value(st, None, 'Stand Price')), 'left', 'top'])
+#                                new_stand.append(["Stand Price Gradient: " + str(stand_attributes_get_value(st, None, 'Stand Price Gradient')), 'left', 'top'])
 #                                rsa = stand_analysis.objects.filter(sa_stand=x.sl_stand).order_by('sa_analysis_number')
+
+
                                 rsa = stand_get_all_analysis_records(st, run_id)
                                 for r in rsa:
                                         if(r[1] != 'MC Rules Applied'):
 #                                        sa_analysis_number, sa_analysis_title, sa_analysis_value = stand_get_analysis_record(r.sa_stand, run_id, None, r.sa_analysis_title)
 #                                        new_stand.append([str(sa_analysis_title)+": "+str(sa_analysis_value), 'left', 'top'])
-                                                new_stand.append([str(r[1])+": "+str(r[2]), 'left', 'top'])
+                                                new_stand.append(["A-"+str(r[1])+": "+str(r[2]), 'left', 'top'])
                         ax = new_place_rectangle(fig, ax, sl_x, sl_y, sl_x_length, sl_y_length, image_multiplier, stand_fill_color, stand_outline_color, new_stand, text_color, fl_div, 1, 50, True, 0.4)
         return ax
 
@@ -509,7 +513,7 @@ def create_sold_info_subplot(fig, gs, image_margin, header_space, footer_space, 
         ax.set_xlim(0, ax_width)
         ax.set_ylim(0, ax_height)
         ax.axis('off')
-        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, image_multiplier, '#ffffff', '#000000', analysis_set, '#000000', fl_div, 1, 50, False, 0.2)
+        ax = new_place_rectangle(fig, ax, 0, 0, ax_width, ax_height, image_multiplier, '#ffffff', '#000000', analysis_set, '#000000', fl_div, 1, 200, False, 0.2)
         return(fig)
 
 def floorplan_subplot(rxe, fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, floorplan_length, floorplan_height, run_id):

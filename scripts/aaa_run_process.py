@@ -55,7 +55,7 @@ def run_event_start(rxe):
         if(1==1):#first - straight floor plan
                 for fs in stands.objects.filter(s_rx_event=rxe):
                         stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
-                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "100", "integer")
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Gradient', "100", "integer")
                 footer_set = []
                 message_set = []
                 footer_set.append(["Initial Stands", 'center', 'top'])
@@ -64,8 +64,8 @@ def run_event_start(rxe):
                 st_count = 0
                 for fs in stands.objects.filter(s_rx_event=rxe):
                         stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
-                        stand_attributes_record(fs, None, 'Stand Price Gradient', "100", 'integer', timezone.now())
-                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "100", "integer")
+#                        stand_attributes_record(fs, None, 'Stand Price Gradient', "100", 'integer', timezone.now())
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Gradient', "100", "integer")
                 for fs in stands.objects.filter(s_rx_event=rxe):
                         for x in event_sales_transactions.objects.filter(est_event = rxe,est_Stand_Name_Cleaned__iexact = fs.s_number.lower().strip()):
                                 stand_attributes_record(fs, None, 'Stand Status', 'Sold', 'string', timezone.now())
@@ -78,8 +78,8 @@ def run_event_start(rxe):
                 st_count = 0
                 for fs in stands.objects.filter(s_rx_event=rxe):
                         stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
-                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
-                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "1", "integer")
+#                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Gradient', "1", "integer")
                 for fs in stands.objects.filter(s_rx_event=rxe):
                         est = event_sales_transactions.objects.filter(est_event = rxe,est_Stand_Name_Cleaned__iexact = fs.s_number.lower().strip())
                         if(len(est) == 0):
@@ -93,8 +93,8 @@ def run_event_start(rxe):
                 st_count = 0
                 for fs in stands.objects.filter(s_rx_event=rxe):
                         stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
-                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
-                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "1", "integer")
+#                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Gradient', "1", "integer")
                 for fs in stands.objects.filter(s_rx_event=rxe):
                         for ee in event_sales_transactions.objects.filter(est_event = rxe,est_Stand_Name_Cleaned__iexact = fs.s_number.lower().strip()):
                                 if((ee.est_Total_Net_Amount is None) or (float(ee.est_Total_Net_Amount) == 0)):
@@ -106,8 +106,8 @@ def run_event_start(rxe):
                 render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
         if(1==1):#last - no for each stand attribute
                 for fs in stands.objects.filter(s_rx_event=rxe):
-                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
-                        stand_record_analysis_record(fs, run_id, None, 'Sq Foot Gradient', "100", "integer")
+#                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
+                        stand_record_analysis_record(fs, run_id, None, 'Sq Gradient', "1", "integer")
                 sad = stands_attribute_data.objects.filter(sad_event=rxe).values('sad_title', 'sad_value').annotate(count=Count('sad_value'))
                 for x in sad:
                         st_count = 0
@@ -138,8 +138,9 @@ def run_event_year(rxe, create_images):
                 stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
 
         run_id = 0
-        stand_analysis_price(rxe, run_id)
-        build_stand_gradient(rxe, run_id)
+        event_group_and_calculate_square_dim_prices(rxe)
+        stand_analysis_price_initial(rxe, run_id)
+#        build_stand_gradient(rxe, run_id)
 
         st_date = rxe.re_event_start_date - relativedelta(days=365+90)
         ev_date = st_date
@@ -152,7 +153,7 @@ def run_event_year(rxe, create_images):
         header_set.append([str(rxe.re_event_start_date.strftime("%d %b %Y")) + " to " + str(rxe.re_event_end_date.strftime("%d %b %Y")), 'center', 'top'])
 
         to_do = 0
-        while ev_date <= end_date and to_do < 3:
+        while ev_date <= end_date and to_do < 399999999:
 #        if (1 == 0):
                 if(ev_date == st_date):
                         analysis_set_top = []
@@ -166,7 +167,18 @@ def run_event_year(rxe, create_images):
                         for x in event_sales_transactions.objects.filter(est_event = rxe,est_Order_Created_Date__gte=ev_date, est_Order_Created_Date__lte=ev_date+relativedelta(days=1)):
 #                                print(f"event_sales_transactions: {x.est_Order_Created_Date} {x.est_Stand_Name_Cleaned} {x.est_Company_Name}")
                                 record_log_data("aaa_run_process.py", "run_event_year", "working date: " + str(ev_date))
-                                for fs in stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned):
+                                if(x.est_Stand_Name_Cleaned is not None):
+                                        snc = x.est_Stand_Name_Cleaned.lower().strip()
+                                else:
+                                        snc = None
+                                if(x.est_Company_Name is not None):
+                                        cn = x.est_Company_Name.lower().strip()
+                                else:
+                                        cn = None
+                                fss = stands.objects.filter(s_rx_event=rxe, s_number__iexact = snc)
+                                if(len(fss) == 0):
+                                        fss = stands.objects.filter(s_rx_event=rxe, s_name__iexact = cn)
+                                for fs in fss:
                                         stand_attributes_record(fs, None, 'Stand Status', 'New Sell', 'string', timezone.now())
 
                                         if(create_images == True):
@@ -252,7 +264,6 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
 
         record_log_data("aaa_run_process.py", "run_event_monte_carlo_simulation", "completed...")
 
-
 def write_x_to_csv(x, filename):
     logs_dir = os.path.join(settings.BASE_DIR, 'logs')
     os.makedirs(logs_dir, exist_ok=True)
@@ -268,17 +279,13 @@ def write_x_to_csv(x, filename):
                 x.est_Order_Created_Date,x.est_Packages_Sold,x.est_Product_Name
             ])
 
-def run_analysis(rxe):
-        group_and_calculate_square_foot_prices(rxe)
-
-
 
 def cut_down_to_emerging_tech(rxe):
         record_log_data("aaa_run_process.py", "cut_down_to_emerging_tech", "starting...")
-        print(f"starting stands: {len(stands.objects.filter(s_rx_event=rxe))}")
-        print(f"starting event_sales_transactions: {len(event_sales_transactions.objects.filter(est_event = rxe))}")
+#        print(f"starting stands: {len(stands.objects.filter(s_rx_event=rxe))}")
+#        print(f"starting event_sales_transactions: {len(event_sales_transactions.objects.filter(est_event = rxe))}")
         est = event_sales_transactions.objects.filter(est_event = rxe, est_Floor_Plan_Sector__iexact = 'Emerging Tech')
-        print(f"event_sales_transactions: {len(est)}")
+#        print(f"event_sales_transactions: {len(est)}")
         found_stands = 0
         for x in stands.objects.filter(s_rx_event=rxe):
                 found = False
@@ -298,8 +305,8 @@ def cut_down_to_emerging_tech(rxe):
                                         found_sales_transactions = found_sales_transactions + 1
                 if(found == False):
                         x.delete()
-        print(f"stands: {len(stands.objects.filter(s_rx_event=rxe))}")
-        print(f"event_sales_transactions: {len(event_sales_transactions.objects.filter(est_event = rxe))}")
+#        print(f"stands: {len(stands.objects.filter(s_rx_event=rxe))}")
+#        print(f"event_sales_transactions: {len(event_sales_transactions.objects.filter(est_event = rxe))}")
 
 #        for x in est:
 #                print(f"event_sales_transactions: {x.est_Company_Name} {x.est_Stand_Name_Cleaned} {x.est_Floor_Plan_Sector}")
@@ -322,7 +329,7 @@ def run(*args):
                 stand_analysis.objects.filter(sa_stand=x).delete()
                 stand_attributes_record(x, None, 'Stand Status', 'Available', 'string', timezone.now())
                 stand_attributes_record(x, None, 'Stand Price', 'Base', 'string', timezone.now())
-                stand_attributes_record(x, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
+#                stand_attributes_record(x, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
         filename = 'ISC_West25_stand_attributes.xlsx'
         rxe = get_event('ISC West 2025')
         load_stand_attribute_data(rxe, filename)
@@ -338,14 +345,12 @@ def run(*args):
         event_determine_floorplan_max_length_height(rx_event)
 
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-        run_event_start(rx_event)
+#        run_event_start(rx_event)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
         record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-        run_event_year(rx_event, True)
+        run_event_year(rx_event, False)
         record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
-
-#        run_analysis(rx_event)
 
 #        if(rx_event is not None):
 #                pricing_rules.objects.filter(prb_event = rx_event).delete()
