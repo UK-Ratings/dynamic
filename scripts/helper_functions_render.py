@@ -582,10 +582,16 @@ def render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top,
 #        fig = create_analysis2_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 3, 1, analysis_set_1)
 #        fig = create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 4, 1, analysis_set_1)
 
-        if os.environ.get("RX_STATIC_FLOORPLAN_LOCATION") is not None:
-                dir_loc = str(os.environ.get("RX_STATIC_FLOORPLAN_LOCATION"))
+        if(run_id == -1):
+                if os.environ.get("RX_STATIC_INITIAL_VIEW_LOCATION") is not None:
+                        dir_loc = str(os.environ.get("RX_STATIC_INITIAL_VIEW_LOCATION"))
+                else:
+                        dir_loc = None
         else:
-                dir_loc = None
+                if os.environ.get("RX_STATIC_FLOORPLAN_LOCATION") is not None:
+                        dir_loc = str(os.environ.get("RX_STATIC_FLOORPLAN_LOCATION"))
+                else:
+                        dir_loc = None
         if( dir_loc is not None):
                 pyplot_filename, pyplot_path = write_pyplot_to_file(plt, dir_loc, cdatetime)
         plt.close(fig)

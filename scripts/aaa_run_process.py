@@ -60,12 +60,11 @@ def run_event_start(rxe):
                 footer_set = []
                 message_set = []
                 footer_set.append(["Initial Stands", 'center', 'top'])
-                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", -1)
         if(1==1):#second - now with sold stands
                 st_count = 0
                 for fs in stands.objects.filter(s_rx_event=rxe):
                         stand_attributes_record(fs, None, 'Stand Status', 'Available', 'string', timezone.now())
-#                        stand_attributes_record(fs, None, 'Stand Price Gradient', "100", 'integer', timezone.now())
                         stand_record_analysis_record(fs, run_id, None, 'Sq Gradient', "100", "integer")
                 for fs in stands.objects.filter(s_rx_event=rxe):
                         for x in event_sales_transactions.objects.filter(est_event = rxe,est_Stand_Name_Cleaned__iexact = fs.s_number.lower().strip()):
@@ -74,7 +73,7 @@ def run_event_start(rxe):
                 footer_set = []
                 message_set = []
                 footer_set.append(["Sold Stands: "+str(st_count), 'center', 'top'])
-                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", -1)
         if(1==1):#third - stands missing in sales data
                 st_count = 0
                 for fs in stands.objects.filter(s_rx_event=rxe):
@@ -89,7 +88,7 @@ def run_event_start(rxe):
                 footer_set = []
                 message_set = []
                 footer_set.append(["Stands with no sales data: "+str(st_count), 'center', 'top'])
-                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", -1)
         if(1==1):#fourth - stands missing net sales data
                 st_count = 0
                 for fs in stands.objects.filter(s_rx_event=rxe):
@@ -104,7 +103,7 @@ def run_event_start(rxe):
                 footer_set = []
                 message_set = []
                 footer_set.append(["Stands with net revenue data: "+str(st_count), 'center', 'top'])
-                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+                render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", -1)
         if(1==1):#last - no for each stand attribute
                 for fs in stands.objects.filter(s_rx_event=rxe):
 #                        stand_attributes_record(fs, None, 'Stand Price Gradient', "1", 'integer', timezone.now())
@@ -130,7 +129,7 @@ def run_event_start(rxe):
                         footer_set = []
                         message_set = []
                         footer_set.append([str(x['sad_title'])+": " + str(x['sad_value']) + "--> Stands: "+str(st_count), 'center', 'top'])
-                        render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", 0)
+                        render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Initial", -1)
         record_log_data("aaa_run_process.py", "run_event_start", "completed...")
 
 def run_event_year(rxe, create_images):
@@ -140,8 +139,6 @@ def run_event_year(rxe, create_images):
 
         run_id = 0
         event_sales_by_run.objects.filter(esbr_run_id = run_id).delete()
-        event_sales_by_run.objects.filter(esbr_run_id = 1).delete()
-        event_sales_by_run.objects.filter(esbr_run_id = 2).delete()
         st_date = rxe.re_event_start_date - relativedelta(days=365+90)
         ev_date = st_date
         end_date = rxe.re_event_end_date
@@ -195,8 +192,8 @@ def run_event_year(rxe, create_images):
                                         if(rev_amount is None):
                                                 rev_amount = 0
                                         event_record_event_sales_by_run(fs, run_id, ev_date, rev_amount)
-                                        event_record_event_sales_by_run(fs, 1, ev_date, rev_amount*1.1)
-                                        event_record_event_sales_by_run(fs, 2, ev_date, rev_amount*-1.1)
+#                                        event_record_event_sales_by_run(fs, 1, ev_date, rev_amount*1.1)
+#                                        event_record_event_sales_by_run(fs, 2, ev_date, rev_amount*-1.1)
 #                                        build_stand_counts_by_date(rxe, ev_date)
                                 to_do = to_do + 1
                 ev_date = ev_date + relativedelta(days=1)
@@ -207,11 +204,14 @@ def run_event_year(rxe, create_images):
         footer_set.append(["AS SOLD: FINAL VIEW", 'center', 'top'])
         footer_set.append(['Darker Green higher Price from Average.  Darker Red lower Price from Average.  Gray means we do not have a price.','left', 'top'])
         render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Final", run_id)
-
         record_log_data("aaa_run_process.py", "run_event_year", "completed...")
 
 def run_event_monte_carlo_simulation(rxe, p_number, create_images):
         record_log_data("aaa_run_process.py", "run_event_monte_carlo_simulation", "starting...")
+
+        max_id = event_sales_by_run.objects.aggregate(Max('esbr_run_id'))
+        for xx in range(1, max_id['esbr_run_id']+1):
+                event_sales_by_run.objects.filter(esbr_run_id = xx).delete()
 
         st_date = rxe.re_event_start_date - relativedelta(days=365+90)
         ev_date = st_date
@@ -262,7 +262,6 @@ def run_event_monte_carlo_simulation(rxe, p_number, create_images):
         analysis_set_bottom = []
         footer_set.append(["Monte Carlo Simulation Cycle " + str(p_number) + " Final", 'left', 'top'])
         render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top, analysis_set_bottom, image_multiplier, "Final", p_number)
-
         record_log_data("aaa_run_process.py", "run_event_monte_carlo_simulation", "completed...")
 
 def run_revenue_graph(rxe):
@@ -298,6 +297,8 @@ def write_x_to_csv(x, filename):
 
 def cut_down_to_emerging_tech(rxe):
         record_log_data("aaa_run_process.py", "cut_down_to_emerging_tech", "starting...")
+#        print(f"cut_down_to_emerging_tech stands: {len(stands.objects.filter(s_rx_event=rxe))}")
+#        print(f"cut_down_to_emerging_tech stand_attributes: {len(stand_attributes.objects.filter(sa_event=rxe))}")
 #        print(f"starting stands: {len(stands.objects.filter(s_rx_event=rxe))}")
 #        print(f"starting event_sales_transactions: {len(event_sales_transactions.objects.filter(est_event = rxe))}")
         est = event_sales_transactions.objects.filter(est_event = rxe, est_Floor_Plan_Sector__iexact = 'Emerging Tech')
@@ -310,6 +311,8 @@ def cut_down_to_emerging_tech(rxe):
                                 found = True
                                 found_stands = found_stands + 1
                 if(found == False):
+                        stand_analysis.objects.filter(sa_stand=x).delete()
+                        stand_attributes.objects.filter(sa_stand=x).delete()
                         x.delete()
         found_sales_transactions = 0
         for x in event_sales_transactions.objects.filter(est_event = rxe):
@@ -321,12 +324,6 @@ def cut_down_to_emerging_tech(rxe):
                                         found_sales_transactions = found_sales_transactions + 1
                 if(found == False):
                         x.delete()
-#        print(f"stands: {len(stands.objects.filter(s_rx_event=rxe))}")
-#        print(f"event_sales_transactions: {len(event_sales_transactions.objects.filter(est_event = rxe))}")
-
-#        for x in est:
-#                print(f"event_sales_transactions: {x.est_Company_Name} {x.est_Stand_Name_Cleaned} {x.est_Floor_Plan_Sector}")
-#                write_x_to_csv(x, 'emerging_tech.csv')
         record_log_data("aaa_run_process.py", "cut_down_to_emerging_tech", "completed...")
 
 def run(*args):
@@ -341,46 +338,51 @@ def run(*args):
         image_length, image_height, image_margin, header_space, footer_space, image_multiplier, image_multiplier_small = get_env_values()
 
         if os.environ.get("RX_STATIC_FLOORPLAN_LOCATION") is not None:
-                dir_loc = str(os.environ.get("RX_STATIC_FLOORPLAN_LOCATION"))
-                erase_files_in_dir(dir_loc)
+                erase_files_in_dir(str(os.environ.get("RX_STATIC_FLOORPLAN_LOCATION")))
         if os.environ.get("RX_STATIC_GRAPHS_LOCATION") is not None:
-                dir_loc = str(os.environ.get("RX_STATIC_GRAPHS_LOCATION"))
-                erase_files_in_dir(dir_loc)
+                erase_files_in_dir(str(os.environ.get("RX_STATIC_GRAPHS_LOCATION")))
+        if os.environ.get("RX_STATIC_INITIAL_VIEW_LOCATION") is not None:
+                erase_files_in_dir(str(os.environ.get("RX_STATIC_INITIAL_VIEW_LOCATION")))
 
-#        for x in stands.objects.all():
-#                stand_analysis.objects.filter(sa_stand=x).delete()
-#                stand_attributes_record(x, None, 'Stand Status', 'Available', 'string', timezone.now())
-#                stand_attributes_record(x, None, 'Stand Price', 'Base', 'string', timezone.now())
-#                stand_record_analysis_record(x, 0, None, 'Sq Gradient', str(random.randint(0, 100)), 'integer')
-#        filename = 'ISC_West25_stand_attributes.xlsx'
-#        rxe = get_event('ISC West 2025')
-#        load_stand_attribute_data(rxe, filename)
-
-
-#        record_log_data("aaa_run_process.py", "run", "starting... reset data")
-#        aaa_reset_and_load.run()
-#        record_log_data("aaa_run_process.py", "run", "completed... load data")
         event_name = "ISC West 2025"
-        rx_event = get_event(event_name)
+        rxe = get_event(event_name)
 
-        cut_down_to_emerging_tech(rx_event)
+        if(1==1): # quick reset
+                max_id = event_sales_by_run.objects.aggregate(Max('esbr_run_id'))
+                if(max_id['esbr_run_id__max'] is not None):
+                        for xx in range(0, max_id['esbr_run_id__max']+1):
+                                event_sales_by_run.objects.filter(esbr_run_id = xx).delete()
+                for x in stands.objects.all():
+                        stand_analysis.objects.filter(sa_stand=x).delete()
+                        stand_attributes.objects.filter(sa_stand=x).delete()
 
-#        record_log_data("aaa_run_process.py", "run", "starting... prep work")
-#        event_determine_floorplan_max_length_height(rx_event)
-#        event_group_and_calculate_square_dim_prices(rxe)
-#        stand_analysis_price_initial(rxe, 0)  #zero is the actual sold stands and serves as a base
-#        record_log_data("aaa_run_process.py", "run", "complete... prep work")
+#one or other...
+        #        record_log_data("aaa_run_process.py", "run", "starting... reset data")
+                aaa_reset_and_load.run()
+                event_name = "ISC West 2025"
+                rxe = get_event(event_name)
+#                load_stand_attribute_data(rxe, 'ISC_West25_stand_attributes.xlsx')
+        #        record_log_data("aaa_run_process.py", "run", "completed... load data")
 
-        record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-#        run_event_start(rx_event)
-        record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
+                cut_down_to_emerging_tech(rxe)
 
-        record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
-#        run_event_year(rx_event, False)
-        record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
+                event_determine_floorplan_max_length_height(rxe)
+                event_group_and_calculate_square_dim_prices(rxe)
+
+                record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
+                stand_analysis_price_initial(rxe, 0)  #zero is the actual sold stands and serves as a base
+                run_event_start(rxe)
+#                for x in stands.objects.filter(s_rx_event=rxe):
+#                         stand_print_all_records(x, 0)
+                record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
+
+                record_log_data("aaa_run_process.py", "run", "starting... run_event_year")
+                stand_analysis_price_initial(rxe, 0)  #zero is the actual sold stands and serves as a base
+                run_event_year(rxe, False)
+                record_log_data("aaa_run_process.py", "run", "complete... run_event_year")
 
         record_log_data("aaa_run_process.py", "run", "starting... render_revenue_graph")
-        run_revenue_graph(rx_event)
+        run_revenue_graph(rxe)
         record_log_data("aaa_run_process.py", "run", "complete... render_revenue_graph")
 
 

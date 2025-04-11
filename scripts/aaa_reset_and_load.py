@@ -31,7 +31,6 @@ def load_stand_attribute_data(rxe, filename):
         file_path = os.path.join(settings.BASE_DIR, 'data', filename)
         if not os.path.exists(file_path):
                 raise FileNotFoundError(f"File not found: {file_path}")
-
         data = pd.read_excel(file_path)
 
     # Iterate through each row and create instances of stand attributes

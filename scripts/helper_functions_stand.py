@@ -272,7 +272,6 @@ def stand_analysis_price_initial(rxe, run_id):
                                         stand_record_analysis_record(stt, run_id, None, 'Avg Price', str(price_per_sq), 'float')
                                         stand_record_analysis_record(stt, run_id, None, 'Median Price', str(price_per_sq), 'float')
                                 stand_calc_and_store_gradient(stt, run_id)
-
                         else:
                                 stand_not_found += 1
 #                        sv = stand_attributes_get_all_data(stt)

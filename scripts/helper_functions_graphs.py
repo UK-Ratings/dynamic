@@ -48,15 +48,14 @@ def plot_event_sales_by_run(rxe, ax):
 
     # Plot each run_id as a separate line on the provided axis
     for run_id, group in grouped_data.groupby('run_id'):
-        ax.plot(group['date'], group['cumulative_revenue'], label=f'Run ID {run_id}')
+        ax.plot(group['date'], group['cumulative_revenue'], label=f'Run ID {run_id}', linewidth=20)
 
     # Add labels, legend, and title
     ax.set_xlabel('Date', fontsize=128)
     ax.set_ylabel('Cumulative Revenue ($M)', fontsize=128)
     ax.set_title('Event Sales by Run (Cumulative)', fontsize=128)
-    ax.legend(fontsize=30)
+    ax.legend(fontsize=60)
     ax.grid(True)
-#    ax.set_position([0.1, 0.1, 0.8, 0.8])  # Center the plot within ax
     ax.set_position([0.25, 0.2, 0.55, 0.55])  # Center the plot within ax
     ax.tick_params(axis='x', labelsize=72)
     ax.tick_params(axis='y', labelsize=72)
