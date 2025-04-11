@@ -254,3 +254,26 @@ def event_group_and_calculate_square_dim_prices(rxe):
 
 #HERE - Don't need packages_sold, just the other 4 fields
 #SEEMS TO BE PRICE INCREASES
+
+#class event_sales_by_run(models.Model):
+#    esbr_stand = models.ForeignKey(stands, blank=True, null=True, on_delete=models.CASCADE)
+#    esbr_run_id = models.IntegerField("monte carlo run id", blank=True, null=True)
+#    esbr_sold_date = models.DateTimeField("sold date", blank=True, null=True)
+#    esbr_revenue_amount = models.FloatField("revenue amount", blank=True, null=True)
+#    esbr_total_revenue_to_date = models.FloatField("total revenue to date", blank=True, null=True)
+#    class Meta:
+#        indexes = [
+#            models.Index(fields=['esbr_run_id', 'esbr_sold_date','esbr_stand'], name='esbr_index1'),
+#            models.Index(fields=['esbr_sold_date', 'esbr_run_id','esbr_stand'], name='esbr_index2'),
+#        ]
+
+def event_record_event_sales_by_run(st, run_id, sold_date, revenue_amount):
+        esbr, created = event_sales_by_run.objects.update_or_create(
+                esbr_stand=st,
+                esbr_run_id=run_id,
+                esbr_sold_date=sold_date,
+                defaults={
+                        'esbr_revenue_amount': revenue_amount,
+                        }
+                )
+        return esbr

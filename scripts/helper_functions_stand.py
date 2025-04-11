@@ -181,37 +181,15 @@ def stand_get_all_analysis_records(stand, run_id):
                 stand_data.append([sa_analysis_number,sa_analysis_title,sa_analysis_value])
         return stand_data
 
+def stand_print_all_records(st, run_id):
+        sa = stand_attributes_get_all_data(st)
+        for x in sa:
+                print(f"stand attributes records: {x[0]} {x[1]} {x[2]} {x[3]}")
+        sa = stand_get_all_analysis_records(st, run_id)
+        for x in sa:
+                print(f"stand analysis records: {x[0]} {x[1]} {x[2]}")
 
-def zzzstand_calc_and_store_gradient(st, run_id, sq_price, min_price, max_price, median_price):
-        sa_analysis_number, sa_analysis_title, price = stand_get_analysis_record(st, run_id, None, 'Price Per sq')
-#        print(f"stand_calc_and_store_gradient: {st.s_number} {sq_price} {min_price} {max_price} {price}")
-        if(price is None):
-                cprice = 0.0
-        else:
-                try:
-                        cprice = float(price)
-                except (ValueError, TypeError):
-                        cprice = 0.0
-        if(cprice == 0.0):
-                calc_gr = 0
-        else:
-                if(cprice < min_price):
-                        calc_gr = 1
-                else:
-                        if(cprice < sq_price):
-                                calc_gr = (((cprice - min_price) / (sq_price-min_price))*100) / 2
-                        else:
-                                calc_gr = 50 + (((cprice - sq_price) / (max_price-sq_price))*100)/2
-        try:
-                calc_gr = int(calc_gr)
-        except (ValueError, TypeError):
-                calc_gr = 0
-        if(calc_gr > 100):
-                calc_gr = 100
-        if(calc_gr < 0):
-                calc_gr = 0
-#        print(f"calc_gr: {calc_gr}")
-        stand_record_analysis_record(st, run_id, 300, 'Sq Gradient', str(int(calc_gr)), 'integer')
+
 
 def stand_calc_and_store_gradient(st, run_id):
         sa_analysis_number, sa_analysis_title, sq_price = stand_get_analysis_record(st, run_id, None, 'Price Per sq')
@@ -245,35 +223,6 @@ def stand_calc_and_store_gradient(st, run_id):
 #        print(f"calc_gr: {calc_gr}")
         stand_record_analysis_record(st, run_id, None, 'Sq Gradient', str(int(calc_gr)), 'integer')
 
-def zzzstand_analysis_price(rxe, run_id):
-
-        stand_not_found = 0
-        stands_found = 0
-        if(rxe is not None):
-                stand_analysis.objects.filter(sa_stand__s_rx_event = rxe, sa_run_id = run_id).delete()
-                for x in event_sales_transactions.objects.filter(est_event = rxe):
-                        tst = stands.objects.filter(s_rx_event=rxe, s_number=x.est_Stand_Name_Cleaned)
-#                        st = stand_location.objects.filter(sl_stand__s_rx_event=rxe, sl_stand__s_number=x.est_Stand_Name_Cleaned)
-                        if(len(tst) > 0):
-                                stands_found += 1
-                        else:
-                                tst = stands.objects.filter(s_rx_event=rxe, s_name__iexact=x.est_Company_Name.lower())
-                        if(len(tst) == 0):
-                                stand_not_found += 1
-                        for fs in tst:
-                                stand_record_analysis_record(fs, run_id, 10, 'Stand Area', str(x.est_Stand_Area), 'string')
-                                stand_record_analysis_record(fs, run_id, 20, 'Customer Type', str(x.est_Customer_Type), 'string')
-                                sl_x_length= stand_attributes_get_value(fs, None, 'Stand x length')
-                                sl_y_length= stand_attributes_get_value(fs, None, 'Stand y length')
-                                if(sl_x_length is not None and sl_y_length is not None):
-                                        st_area = str(sl_y_length) + "x" + str(sl_x_length)
-                                else:
-                                        st_area = "Unknown"
-                                stand_record_analysis_record(fs, run_id, 30, 'A Stand Area', st_area, 'string')
-                                stand_record_analysis_record(fs, run_id, 40, 'Net Price', str(float(x.est_Total_Net_Amount)), 'float')
-                                stand_record_analysis_record(fs, run_id, 50, 'Price Per sq', str(float(float(x.est_Total_Net_Amount)/float(sl_x_length * sl_y_length))), 'float')
-                                stand_calc_and_store_gradient(fs, run_id, 129.49, 68.42, 246.55)
-#        print(f"Stand not found: {stand_not_found}, Stands found: {stands_found}")                        
 
 def stand_analysis_price_initial(rxe, run_id):
         stand_not_found = 0
@@ -401,73 +350,6 @@ def stand_analysis_price_apply_monte_carlo(sales_rec, given_stand, run_id):
 #        pricing_rules_record(rxe, 0, None, 'Floor Plan Sector: Drones and Robotics', '1', 'float', default_start_date, default_end_date)
 
 
-def build_stand_gradient(rxe, run_id):
-
-        extremes_to_delete = 10
-        stand_count = 0
-        average_sq_price_total = 0.0
-        max_price = 0.0
-        min_price = 999999999.0
-        price_list = []
-        if(rxe is not None):
-                for xx in stands.objects.filter(s_rx_event=rxe):
-                        sa_analysis_number, sa_analysis_title, price = stand_get_analysis_record(xx, run_id, None, 'Price Per sq')
-                        try:
-                                cor_price = float(price)
-                        except (ValueError, TypeError):
-                                cor_price = 0.0
-                        if(cor_price > 0):
-                                price_list.append(cor_price)
-#                                stand_count += 1
-#                                average_sq_price_total += cor_price
-#                        if(cor_price >= max_price):
-#                                max_price = cor_price
-#                        if(cor_price <= min_price and cor_price != 0.0):
-#                                min_price = cor_price
-                price_list.sort()
-                if(len(price_list) > extremes_to_delete*2):
-                        price_list = price_list[extremes_to_delete:-extremes_to_delete]
-                average_sq_price = sum(price_list) / len(price_list)
-                max_price = price_list[-1]
-                min_price = price_list[0]
-                if(min_price < 0.0):
-                        min_price = 1
-                print(f"Average sq price: {average_sq_price}, stand_count: {stand_count}, Max Price: {max_price} Min Price: {min_price}")
-                for xx in stands.objects.filter(s_rx_event=rxe):
-                        sa_analysis_number, sa_analysis_title, price = stand_get_analysis_record(xx, run_id, None, 'Price Per sq')
-                        if(price is None):
-                                cprice = 0.0
-                        else:
-                                try:
-                                        cprice = float(price)
-                                except (ValueError, TypeError):
-                                        cprice = 0.0
-                        if(cprice == 0.0):
-                                calc_gr = 0
-                        else:
-                                if(cprice < min_price):
-                                        calc_gr = 1
-                                else:
-                                        if(cprice < average_sq_price):
-                                                calc_gr = (((cprice - min_price) / (average_sq_price-min_price))*100) / 2
-                                        else:
-                                                calc_gr = 50 + (((cprice - average_sq_price) / (max_price-average_sq_price))*100)/2
-                        try:
-                                calc_gr = int(calc_gr)
-                        except (ValueError, TypeError):
-                                calc_gr = 0
-                        if(calc_gr > 100):
-                                calc_gr = 100
-                        if(calc_gr < 0):
-                                calc_gr = 0
-                        stand_record_analysis_record(xx, None, 'Sq Gradient', str(int(calc_gr)), 'integer', timezone.now())
-
-
-#                        xx.s_stand_price_gradient = int(calc_gr)
-#                        xx.save()
-#                        stand_record_analysis_record(xx, run_id, None, 'Sq Gradient All', str(int(calc_gr)), 'integer')
-
-
 
 
 
@@ -477,21 +359,13 @@ def create_stand(eve, stand_name, stand_number, x, y, x_length, y_length):
         st, created = stands.objects.update_or_create(s_rx_event= eve, 
                         s_name=stand_name,
                         s_number=stand_number)
-#        ,
-#                        defaults={
-#                                's_stand_status':'Available', 
-#                                's_stand_price':'Base',
-#                                's_stand_price_gradient': random.randint(0, 100),})
 
-#        sl = stand_location.objects.update_or_create(sl_stand=st, defaults={
-#                                'sl_x':x, 'sl_y':y, 'sl_x_length':x_length, 'sl_y_length':y_length})
         stand_attributes_record(st, None, 'Stand x', str(x), 'float', timezone.now())
         stand_attributes_record(st, None, 'Stand y', str(y), 'float', timezone.now())
         stand_attributes_record(st, None, 'Stand x length', str(x_length), 'float', timezone.now())
         stand_attributes_record(st, None, 'Stand y length', str(y_length), 'float', timezone.now())
         stand_attributes_record(st, None, 'Stand Status', 'Available', 'string', timezone.now())
         stand_attributes_record(st, None, 'Stand Price', 'Base', 'string', timezone.now())
-#        stand_attributes_record(st, None, 'Stand Price Gradient', str(random.randint(0, 100)), 'integer', timezone.now())
 
 
 def build_stand_counts_by_date(rxe, ev_date):

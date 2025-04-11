@@ -170,3 +170,14 @@ class pricing_rules(models.Model):
             models.Index(fields=['prb_event', 'prb_run_id','prb_title'], name='prb_index2'),
         ]
 
+class event_sales_by_run(models.Model):
+    esbr_stand = models.ForeignKey(stands, blank=True, null=True, on_delete=models.CASCADE)
+    esbr_run_id = models.IntegerField("monte carlo run id", blank=True, null=True)
+    esbr_sold_date = models.DateTimeField("sold date", blank=True, null=True)
+    esbr_revenue_amount = models.FloatField("revenue amount", blank=True, null=True)
+    class Meta:
+        indexes = [
+            models.Index(fields=['esbr_run_id', 'esbr_sold_date','esbr_stand'], name='esbr_index1'),
+            models.Index(fields=['esbr_sold_date', 'esbr_run_id','esbr_stand'], name='esbr_index2'),
+        ]
+    

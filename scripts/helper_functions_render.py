@@ -558,7 +558,7 @@ def render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top,
         floor_length = rxe.re_floor_length 
         floor_height = rxe.re_floor_height
 
-        image_length, image_height, image_margin, header_space, footer_space, im_multi, im_multi_sm, static_floorplan_loc, static_analysis_loc = get_env_values()
+        image_length, image_height, image_margin, header_space, footer_space, im_multi, im_multi_sm = get_env_values()
         plt_length = int((image_length*image_multiplier)/100.0)
         plt_height = int((image_height*image_multiplier)/100.0)
 
@@ -582,7 +582,12 @@ def render_floorplan(rxe, header_set, footer_set, message_set, analysis_set_top,
 #        fig = create_analysis2_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 3, 1, analysis_set_1)
 #        fig = create_analysis3_subplot(fig, gs, image_margin, header_space, footer_space, image_length, image_height, image_multiplier, 5, 4, 1, analysis_set_1)
 
-        pyplot_filename, pyplot_path = write_pyplot_to_file(plt, static_floorplan_loc, cdatetime)
+        if os.environ.get("RX_STATIC_FLOORPLAN_LOCATION") is not None:
+                dir_loc = str(os.environ.get("RX_STATIC_FLOORPLAN_LOCATION"))
+        else:
+                dir_loc = None
+        if( dir_loc is not None):
+                pyplot_filename, pyplot_path = write_pyplot_to_file(plt, dir_loc, cdatetime)
         plt.close(fig)
 
         record_log_data("aaa_helper_functions.py", "run_event_year", "completed: event name: " + str(rxe.re_name))

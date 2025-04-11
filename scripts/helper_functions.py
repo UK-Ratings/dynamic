@@ -118,16 +118,7 @@ def get_env_values():
                 image_multiplier_small = int(os.environ.get("RX_FLOORPLAN_IMAGE_MULTIPLIER_SMALL"))
         else:
                 image_multiplier_small = None
-        if os.environ.get("RX_STATIC_FLOORPLAN_LOCATION") is not None:
-                static_floorplan_loc = str(os.environ.get("RX_STATIC_FLOORPLAN_LOCATION"))
-        else:
-                static_floorplan_loc = None
-        if os.environ.get("RX_STATIC_ANALYSIS_LOCATION") is not None:
-                static_analysis_loc = str(os.environ.get("RX_STATIC_ANALYSIS_LOCATION"))
-        else:
-                static_analysis_loc = None
-        return image_length, image_height, image_margin, header_space, footer_space, \
-                                image_multiplier, image_multiplier_small, static_floorplan_loc, static_analysis_loc
+        return image_length, image_height, image_margin, header_space, footer_space, image_multiplier, image_multiplier_small
 def erase_files_in_dir(media_directory):
 
     dumps_dir = os.path.join(settings.BASE_DIR, 'static/'+media_directory)

@@ -22,7 +22,7 @@ def load_floorplan_data(rxe, filename, ratio_multiplier):
 
         data = pd.read_excel(file_path)
 
-    # Iterate through each row and create instances of event_sales_transactions
+    # Iterate through each row and create instances of stands
         for _, row in data.iterrows():
                 max_length, min_length, side_lengths = get_polygon_side_lengths(row['geometry'], ratio_multiplier)
                 xpos, ypos = get_nearest_position_to_origin(row['geometry'], ratio_multiplier)
@@ -34,7 +34,7 @@ def load_stand_attribute_data(rxe, filename):
 
         data = pd.read_excel(file_path)
 
-    # Iterate through each row and create instances of event_sales_transactions
+    # Iterate through each row and create instances of stand attributes
         for _, row in data.iterrows():
                 sv = row['Value']
                 if str(sv).lower() == 'nan':
